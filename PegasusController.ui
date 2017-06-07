@@ -70,7 +70,7 @@
       <property name="title">
        <string>Motor Settings</string>
       </property>
-      <widget class="QCheckBox" name="checkBox_4">
+      <widget class="QCheckBox" name="reverseDir">
        <property name="geometry">
         <rect>
          <x>20</x>
@@ -96,7 +96,7 @@
         <string>Limit Position :</string>
        </property>
       </widget>
-      <widget class="QCheckBox" name="checkBox_3">
+      <widget class="QCheckBox" name="limitEnable">
        <property name="geometry">
         <rect>
          <x>200</x>
@@ -301,7 +301,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
-          <widget class="QCheckBox" name="checkBox">
+          <widget class="QCheckBox" name="knobEnable">
            <property name="text">
             <string>Enable Knob</string>
            </property>
@@ -348,7 +348,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="checkBox_2">
+         <widget class="QCheckBox" name="backlashEnable">
           <property name="text">
            <string>On</string>
           </property>

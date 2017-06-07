@@ -218,12 +218,14 @@ int	X2Focuser::execModalSettingsDialog(void)
     bool bPressedOK = false;
     int nMaxSpeed = 0;
     int nPosition = 0;
+    bool bLimitEnabled = false;
     int nPosLimit = 0;
     int nBacklashSteps = 0;
     bool bBacklashEnabled = false;
     bool bRotaryEnabled = false;
     int nPegasusDeviceType = NONE;
     int nMotorType = NONE;
+    bool bStepperEnable = false;
     bool bReverse = false;
 
     mUiEnabled = false;
@@ -259,12 +261,12 @@ int	X2Focuser::execModalSettingsDialog(void)
         dx->setEnabled("pushButtonSet2", true);
         dx->setPropertyInt("newPos", "value", nPosition);
 
-        // reverse  checkBox_4
+        // reverse  reverseDir
         nErr = m_PegasusController.getReverseEnable(bReverse);
         if(bReverse)
-            dx->setChecked("checkBox_4", true);
+            dx->setChecked("reverseDir", true);
         else
-            dx->setChecked("checkBox_4", false);
+            dx->setChecked("reverseDir", false);
 
         // backlash
         dx->setEnabled("backlashSteps", true);
@@ -278,9 +280,9 @@ int	X2Focuser::execModalSettingsDialog(void)
         else
             bBacklashEnabled = true;
         if(bBacklashEnabled)
-            dx->setChecked("checkBox_2", true);
+            dx->setChecked("backlashEnable", true);
         else
-            dx->setChecked("checkBox_2", false);
+            dx->setChecked("backlashEnable", false);
         // rotary
         dx->setEnabled("checkBox", true);
         nErr = m_PegasusController.getEnableRotaryEncoder(bRotaryEnabled);
@@ -325,11 +327,11 @@ int	X2Focuser::execModalSettingsDialog(void)
         dx->setEnabled("pushButtonSet1", false);
         dx->setEnabled("newPos", false);
         dx->setPropertyInt("newPos", "value", 0);
-        dx->setEnabled("checkBox_4", false);
+        dx->setEnabled("reverseDir", false);
         dx->setEnabled("pushButtonSet2", false);
         dx->setEnabled("backlashSteps", false);
         dx->setPropertyInt("backlashSteps", "value", 0);
-        dx->setEnabled("checkBox_2", false);
+        dx->setEnabled("backlashEnable", false);
         dx->setEnabled("checkBox", false);
         dx->setEnabled("radioButton", false);
         dx->setEnabled("radioButton_2", false);
@@ -337,12 +339,12 @@ int	X2Focuser::execModalSettingsDialog(void)
 
     // linit is done in software so it's always enabled.
     dx->setEnabled("posLimit", true);
-    dx->setEnabled("checkBox_3", true);
+    dx->setEnabled("limitEnable", true);
     dx->setPropertyInt("posLimit", "value", m_PegasusController.getPosLimit());
     if(m_PegasusController.isPosLimitEnabled())
-        dx->setChecked("checkBox_3", true);
+        dx->setChecked("limitEnable", true);
     else
-        dx->setChecked("checkBox_3", false);
+        dx->setChecked("limitEnable", false);
 
 
     X2MutexLocker ml(GetMutex());
@@ -355,12 +357,85 @@ int	X2Focuser::execModalSettingsDialog(void)
 
     //Retreive values from the user interface
     if (bPressedOK) {
+        nErr = SB_OK;
+        // get limit option
+        bLimitEnabled = dx->isChecked("limitEnable");
+        dx->propertyInt("posLimit", "value", nPosLimit);
+        if(bLimitEnabled && nPosLimit>0) { // a position limit of 0 doesn't make sense :)
+            m_PegasusController.setPosLimit(nPosition);
+            m_PegasusController.enablePosLimit(bLimitEnabled);
+        } else {
+            m_PegasusController.enablePosLimit(false);
+        }
+        // get reverse
+        bReverse = dx->isChecked("reverseDir");
+        nErr = m_PegasusController.setReverseEnable(bReverse);
+        if(nErr)
+            return nErr;
+
+        // get backlash if enable, disbale if needed
+        bBacklashEnabled = dx->isChecked("backlashEnable");
+        if(bBacklashEnabled) {
+            dx->propertyInt("backlashSteps", "value", nBacklashSteps);
+            nErr = m_PegasusController.setBacklashComp(nBacklashSteps);
+            if(nErr)
+                return nErr;
+        }
+        else {
+            nErr = m_PegasusController.setBacklashComp(0); // disable backlash comp
+            if(nErr)
+                return nErr;
+        }
+        // enable the knob if needed
+        bRotaryEnabled = dx->isChecked("knobEnable");
+        nErr = m_PegasusController.setEnableRotaryEncoder(bRotaryEnabled);
+        if(nErr)
+            return nErr;
+
+        // set motor type
+        bStepperEnable = dx->isChecked("radioButton"); // STEPPER
+        if(bStepperEnable) {
+            nErr = m_PegasusController.setMotorType(STEPPER);
+        }
+        else {
+            nErr = m_PegasusController.setMotorType(DC);
+        }
+        if(nErr)
+            return nErr;
+        // save values to config
+        nErr |= m_pIniUtil->writeInt(PARENT_KEY, POS_LIMIT, bLimitEnabled);
+        nErr |= m_pIniUtil->writeInt(PARENT_KEY, POS_LIMIT_ENABLED, nPosLimit);
     }
-    return SB_OK;
+    return nErr;
 }
 
 void X2Focuser::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 {
+    int nErr = SB_OK;
+    int nTmpVal;
+    char szErrorMessage[LOG_BUFFER_SIZE];
+
+    // max speed
+    if (!strcmp(pszEvent, "on_pushButtonSet1_clicked")) {
+        uiex->propertyInt("maxSpeed", "value", nTmpVal);
+        nErr = m_PegasusController.setMotoMaxSpeed(nTmpVal);
+        if(nErr) {
+            snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error setting max speed : Error %d", nErr);
+            uiex->messageBox("Set Max Speed", szErrorMessage);
+            return;
+        }
+    }
+    // max new
+    else if (!strcmp(pszEvent, "on_pushButtonSet2_clicked")) {
+        uiex->propertyInt("newPos", "value", nTmpVal);
+        nErr = m_PegasusController.setMotoMaxSpeed(nTmpVal);
+        if(nErr) {
+            snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error setting new position : Error %d", nErr);
+            uiex->messageBox("Set New Position", szErrorMessage);
+            return;
+        }
+    }
+
 
 }
 
@@ -502,10 +577,10 @@ void X2Focuser::portName(BasicStringInterface& str) const
 
 }
 
-void X2Focuser::setPortName(const char* szPort)
+void X2Focuser::setPortName(const char* pszPort)
 {
     if (m_pIniUtil)
-        m_pIniUtil->writeString(PARENT_KEY, CHILD_KEY_PORTNAME, szPort);
+        m_pIniUtil->writeString(PARENT_KEY, CHILD_KEY_PORTNAME, pszPort);
 
 }
 

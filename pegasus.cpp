@@ -37,7 +37,7 @@ CPegasusController::~CPegasusController()
         m_pSerx->close();
 }
 
-int CPegasusController::Connect(const char *szPort)
+int CPegasusController::Connect(const char *pszPort)
 {
     int nErr = DMFC_OK;
     int nDevice;
@@ -46,7 +46,7 @@ int CPegasusController::Connect(const char *szPort)
         return ERR_COMMNOLINK;
 
     // 19200 8N1
-    if(m_pSerx->open(szPort, 19200, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1") == 0)
+    if(m_pSerx->open(pszPort, 19200, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1") == 0)
         m_bIsConnected = true;
     else
         m_bIsConnected = false;
@@ -314,7 +314,7 @@ int CPegasusController::getEnableRotaryEncoder(bool &bEnabled)
     return nErr;
 }
 
-int CPegasusController::getFirmwareVersion(char *szVersion, int nStrMaxLen)
+int CPegasusController::getFirmwareVersion(char *pszVersion, int nStrMaxLen)
 {
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
@@ -326,7 +326,7 @@ int CPegasusController::getFirmwareVersion(char *szVersion, int nStrMaxLen)
     if(nErr)
         return nErr;
 
-    strncpy(szVersion, szResp, nStrMaxLen);
+    strncpy(pszVersion, szResp, nStrMaxLen);
     return nErr;
 }
 
@@ -608,7 +608,7 @@ int CPegasusController::getReverseEnable(bool &bEnabled)
 
 #pragma mark command and response functions
 
-int CPegasusController::dmfcCommand(const char *szszCmd, char *szResult, int nResultMaxLen)
+int CPegasusController::dmfcCommand(const char *pszszCmd, char *pszResult, int nResultMaxLen)
 {
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
@@ -616,10 +616,10 @@ int CPegasusController::dmfcCommand(const char *szszCmd, char *szResult, int nRe
 
     m_pSerx->purgeTxRx();
     if (m_bDebugLog && m_pLogger) {
-        snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CXagyl::filterWheelCommand] Sending %s\n",szszCmd);
+        snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CXagyl::filterWheelCommand] Sending %s\n",pszszCmd);
         m_pLogger->out(m_szLogBuffer);
     }
-    nErr = m_pSerx->writeFile((void *)szszCmd, strlen(szszCmd), ulBytesWrite);
+    nErr = m_pSerx->writeFile((void *)pszszCmd, strlen(pszszCmd), ulBytesWrite);
     m_pSerx->flushTx();
 
     // printf("Command %s sent. wrote %lu bytes\n", szCmd, ulBytesWrite);
@@ -631,7 +631,7 @@ int CPegasusController::dmfcCommand(const char *szszCmd, char *szResult, int nRe
         return nErr;
     }
 
-    if(szResult) {
+    if(pszResult) {
         // read response
         if (m_bDebugLog && m_pLogger) {
             snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CXagyl::filterWheelCommand] Getting response.\n");
@@ -645,23 +645,23 @@ int CPegasusController::dmfcCommand(const char *szszCmd, char *szResult, int nRe
             }
         }
         // printf("Got response : %s\n",resp);
-        strncpy(szResult, szResp, nResultMaxLen);
+        strncpy(pszResult, szResp, nResultMaxLen);
     }
     return nErr;
 }
 
-int CPegasusController::readResponse(char *szRespBuffer, int nBufferLen)
+int CPegasusController::readResponse(char *pszRespBuffer, int nBufferLen)
 {
     int nErr = DMFC_OK;
     unsigned long ulBytesRead = 0;
     unsigned long ulTotalBytesRead = 0;
-    char *bufPtr;
+    char *pszBufPtr;
 
-    memset(szRespBuffer, 0, (size_t) nBufferLen);
-    bufPtr = szRespBuffer;
+    memset(pszRespBuffer, 0, (size_t) nBufferLen);
+    pszBufPtr = pszRespBuffer;
 
     do {
-        nErr = m_pSerx->readFile(bufPtr, 1, ulBytesRead, MAX_TIMEOUT);
+        nErr = m_pSerx->readFile(pszBufPtr, 1, ulBytesRead, MAX_TIMEOUT);
         if(nErr) {
             if (m_bDebugLog && m_pLogger) {
                 snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CNexDome::readResponse] readFile nError.\n");
@@ -671,7 +671,7 @@ int CPegasusController::readResponse(char *szRespBuffer, int nBufferLen)
         }
 
         if (m_bDebugLog && m_pLogger) {
-            snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CNexDome::readResponse] respBuffer = %s\n",szRespBuffer);
+            snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CNexDome::readResponse] respBuffer = %s\n",pszRespBuffer);
             m_pLogger->out(m_szLogBuffer);
         }
 
@@ -688,19 +688,19 @@ int CPegasusController::readResponse(char *szRespBuffer, int nBufferLen)
             snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CNexDome::readResponse] ulBytesRead = %lu\n",ulBytesRead);
             m_pLogger->out(m_szLogBuffer);
         }
-    } while (*bufPtr++ != '\n' && ulTotalBytesRead < nBufferLen );
+    } while (*pszBufPtr++ != '\n' && ulTotalBytesRead < nBufferLen );
 
-    *bufPtr = 0; //remove the \n
+    *pszBufPtr = 0; //remove the \n
     return nErr;
 }
 
 
-int CPegasusController::parseResp(char *resp, std::vector<std::string>  &svParsedResp)
+int CPegasusController::parseResp(char *pszResp, std::vector<std::string>  &svParsedResp)
 {
     int n;
     std::string sSegment;
     std::vector<std::string> svSeglist;
-    std::stringstream ssTmpGinf(resp);
+    std::stringstream ssTmpGinf(pszResp);
 
     std::cout << "tmpGinf = " << ssTmpGinf.str() << "\n";
     // split the string into vector elements

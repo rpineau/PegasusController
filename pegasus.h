@@ -64,7 +64,7 @@ public:
     CPegasusController();
     ~CPegasusController();
 
-    int         Connect(const char *szPort);
+    int         Connect(const char *pszPort);
     void        Disconnect(void);
     bool        IsConnected(void) { return m_bIsConnected; };
 
@@ -95,7 +95,7 @@ public:
     int         setEnableRotaryEncoder(bool bEnabled);
     int         getEnableRotaryEncoder(bool &bEnabled);
 
-    int         getFirmwareVersion(char *szVersion, int nStrMaxLen);
+    int         getFirmwareVersion(char *pszVersion, int nStrMaxLen);
     int         getTemperature(double &dTemperature);
 
     int         getPosition(int &nPosition);
@@ -126,9 +126,9 @@ public:
 
 protected:
 
-    int             dmfcCommand(const char *szCmd, char *szResult, int nResultMaxLen);
-    int             readResponse(char *szRespBuffer, int nBufferLen);
-    int             parseResp(char *szResp, std::vector<std::string>  &sParsedRes);
+    int             dmfcCommand(const char *pszCmd, char *pszResult, int nResultMaxLen);
+    int             readResponse(char *pszRespBuffer, int nBufferLen);
+    int             parseResp(char *pszResp, std::vector<std::string>  &sParsedRes);
 
 
     SerXInterface   *m_pSerx;
