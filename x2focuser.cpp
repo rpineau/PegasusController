@@ -41,7 +41,8 @@ X2Focuser::X2Focuser(const char* pszDisplayName,
         m_PegasusController.setPosLimit(m_pIniUtil->readInt(PARENT_KEY, POS_LIMIT, 0));
         m_PegasusController.enablePosLimit(m_pIniUtil->readInt(PARENT_KEY, POS_LIMIT_ENABLED, false));
     }
-
+	m_PegasusController.SetSerxPointer(m_pSerX);
+	m_PegasusController.setLogger(m_pLogger);
 }
 
 X2Focuser::~X2Focuser()
@@ -239,7 +240,7 @@ int	X2Focuser::execModalSettingsDialog(void)
     if (NULL == (dx = uiutil.X2DX()))
         return ERR_POINTER;
 
-    // set controls values
+	// set controls values
     if(m_bLinked) {
         // get data from device
         m_PegasusController.getConsolidatedStatus();
@@ -335,6 +336,19 @@ int	X2Focuser::execModalSettingsDialog(void)
         dx->setEnabled("checkBox", false);
         dx->setEnabled("radioButton", false);
         dx->setEnabled("radioButton_2", false);
+		
+		// testing
+		dx->setEnabled("maxSpeed", true);
+		dx->setEnabled("pushButtonSet1", true);
+		dx->setEnabled("newPos", true);
+		dx->setEnabled("pushButtonSet2", true);
+		dx->setEnabled("backlashSteps", true);
+		dx->setEnabled("backlashEnable", true);
+		dx->setEnabled("checkBox", true);
+		dx->setEnabled("radioButton", true);
+		dx->setEnabled("radioButton_2", true);
+		dx->setChecked("radioButton", true);
+
     }
 
     // linit is done in software so it's always enabled.
@@ -367,41 +381,43 @@ int	X2Focuser::execModalSettingsDialog(void)
         } else {
             m_PegasusController.enablePosLimit(false);
         }
-        // get reverse
-        bReverse = dx->isChecked("reverseDir");
-        nErr = m_PegasusController.setReverseEnable(bReverse);
-        if(nErr)
-            return nErr;
+		if(m_bLinked) {
+			// get reverse
+			bReverse = dx->isChecked("reverseDir");
+			nErr = m_PegasusController.setReverseEnable(bReverse);
+			if(nErr)
+				return nErr;
 
-        // get backlash if enable, disbale if needed
-        bBacklashEnabled = dx->isChecked("backlashEnable");
-        if(bBacklashEnabled) {
-            dx->propertyInt("backlashSteps", "value", nBacklashSteps);
-            nErr = m_PegasusController.setBacklashComp(nBacklashSteps);
-            if(nErr)
-                return nErr;
-        }
-        else {
-            nErr = m_PegasusController.setBacklashComp(0); // disable backlash comp
-            if(nErr)
-                return nErr;
-        }
-        // enable the knob if needed
-        bRotaryEnabled = dx->isChecked("knobEnable");
-        nErr = m_PegasusController.setEnableRotaryEncoder(bRotaryEnabled);
-        if(nErr)
-            return nErr;
+			// get backlash if enable, disbale if needed
+			bBacklashEnabled = dx->isChecked("backlashEnable");
+			if(bBacklashEnabled) {
+				dx->propertyInt("backlashSteps", "value", nBacklashSteps);
+				nErr = m_PegasusController.setBacklashComp(nBacklashSteps);
+				if(nErr)
+					return nErr;
+			}
+			else {
+				nErr = m_PegasusController.setBacklashComp(0); // disable backlash comp
+				if(nErr)
+					return nErr;
+			}
+			// enable the knob if needed
+			bRotaryEnabled = dx->isChecked("knobEnable");
+			nErr = m_PegasusController.setEnableRotaryEncoder(bRotaryEnabled);
+			if(nErr)
+				return nErr;
 
-        // set motor type
-        bStepperEnable = dx->isChecked("radioButton"); // STEPPER
-        if(bStepperEnable) {
-            nErr = m_PegasusController.setMotorType(STEPPER);
-        }
-        else {
-            nErr = m_PegasusController.setMotorType(DC);
-        }
-        if(nErr)
-            return nErr;
+			// set motor type
+			bStepperEnable = dx->isChecked("radioButton"); // STEPPER
+			if(bStepperEnable) {
+				nErr = m_PegasusController.setMotorType(STEPPER);
+			}
+			else {
+				nErr = m_PegasusController.setMotorType(DC);
+			}
+			if(nErr)
+				return nErr;
+		}
         // save values to config
         nErr |= m_pIniUtil->writeInt(PARENT_KEY, POS_LIMIT, bLimitEnabled);
         nErr |= m_pIniUtil->writeInt(PARENT_KEY, POS_LIMIT_ENABLED, nPosLimit);

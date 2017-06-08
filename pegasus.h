@@ -18,8 +18,21 @@
 #include "../../licensedinterfaces/serxinterface.h"
 #include "../../licensedinterfaces/loggerinterface.h"
 
+#define PEGA_DEBUG
+
+#ifdef PEGA_DEBUG
+#if defined(SB_WIN_BUILD)
+#define PEGA_LOGFILENAME "C:\\PegausLog.txt"
+#elif defined(SB_LINUX_BUILD)
+#define PEGA_LOGFILENAME "/tmp/PegausLog.txt"
+#elif defined(SB_MAC_BUILD)
+#define PEGA_LOGFILENAME "/tmp/PegausLog.txt"
+#endif
+#endif
+
+
 #define SERIAL_BUFFER_SIZE 20
-#define MAX_TIMEOUT 5000
+#define MAX_TIMEOUT 1000
 #define LOG_BUFFER_SIZE 256
 
 enum DMFC_Errors    {DMFC_OK = 0, NOT_CONNECTED, ND_CANT_CONNECT, DMFC_BAD_CMD_RESPONSE, COMMAND_FAILED};
@@ -145,6 +158,13 @@ protected:
     int             m_nTargetPos;
     int             m_nPosLimit;
     bool            m_bPosLimitEnabled;
+
+#ifdef PEGA_DEBUG
+	// timestamp for logs
+	char *timestamp;
+	time_t ltime;
+	FILE *Logfile;	  // LogFile
+#endif
 
 };
 

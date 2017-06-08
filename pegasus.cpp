@@ -29,12 +29,25 @@ CPegasusController::CPegasusController()
     
     m_pSerx = NULL;
     m_pLogger = NULL;
+
+#ifdef	PEGA_DEBUG
+	Logfile = fopen(PEGA_LOGFILENAME, "w");
+	ltime = time(NULL);
+	char *timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] CPegasusController Constructor Called.\n", timestamp);
+#endif
+
 }
 
 CPegasusController::~CPegasusController()
 {
     if(m_bIsConnected && m_pSerx)
         m_pSerx->close();
+#ifdef	PEGA_DEBUG
+	// Close LogFile
+	if (Logfile) fclose(Logfile);
+#endif
 }
 
 int CPegasusController::Connect(const char *pszPort)
@@ -45,6 +58,13 @@ int CPegasusController::Connect(const char *pszPort)
     if(!m_pSerx)
         return ERR_COMMNOLINK;
 
+#ifdef PEGA_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] CPegasusController::Connect Called %s\n", timestamp, pszPort);
+#endif
+
     // 19200 8N1
     if(m_pSerx->open(pszPort, 19200, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1") == 0)
         m_bIsConnected = true;
@@ -54,6 +74,13 @@ int CPegasusController::Connect(const char *pszPort)
     if(!m_bIsConnected)
         return ERR_COMMNOLINK;
 
+#ifdef PEGA_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] CPegasusController::Connect connected to %s\n", timestamp, pszPort);
+#endif
+	
     if (m_bDebugLog && m_pLogger) {
         snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::Connect] Connected.\n");
         m_pLogger->out(m_szLogBuffer);
@@ -65,6 +92,13 @@ int CPegasusController::Connect(const char *pszPort)
     // get status so we can figure out what device we are connecting to.
     nErr = getDeviceType(nDevice);
     if(nErr) {
+		m_bIsConnected = false;
+#ifdef PEGA_DEBUG
+		ltime = time(NULL);
+		timestamp = asctime(localtime(&ltime));
+		timestamp[strlen(timestamp) - 1] = 0;
+		fprintf(Logfile, "[%s] CPegasusController::Connect error getting device type\n", timestamp);
+#endif
         return nErr;
     }
     // m_globalStatus.deviceType now contains the device type
@@ -75,13 +109,17 @@ void CPegasusController::Disconnect()
 {
     if(m_bIsConnected && m_pSerx)
         m_pSerx->close();
-    m_bIsConnected = false;
+ 
+	m_bIsConnected = false;
 }
 
 #pragma mark move commands
 int CPegasusController::haltFocuser()
 {
     int nErr;
+
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     nErr = dmfcCommand("H\n", NULL, 0);
 
@@ -92,6 +130,9 @@ int CPegasusController::gotoPosition(int nPos)
 {
     int nErr;
     char szCmd[SERIAL_BUFFER_SIZE];
+
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     if (m_bPosLimitEnabled && nPos>m_nPosLimit)
         return ERR_LIMITSEXCEEDED;
@@ -108,6 +149,9 @@ int CPegasusController::moveRelativeToPosision(int nSteps)
     int nErr;
     char szCmd[SERIAL_BUFFER_SIZE];
 
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
+
     sprintf(szCmd,"G%d\n", nSteps);
     nErr = dmfcCommand(szCmd, NULL, 0);
 
@@ -119,6 +163,10 @@ int CPegasusController::moveRelativeToPosision(int nSteps)
 int CPegasusController::isGoToComplete(bool &bComplete)
 {
     int nErr = DMFC_OK;
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
+	
 
     getPosition(m_globalStatus.nCurPos);
     if(m_globalStatus.nCurPos == m_nTargetPos)
@@ -132,6 +180,10 @@ int CPegasusController::isMotorMoving(bool &bMoving)
 {
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
+	
 
     // OK_SMFC or OK_DMFC
     nErr = dmfcCommand("I\n", szResp, SERIAL_BUFFER_SIZE);
@@ -162,6 +214,10 @@ int CPegasusController::getStatus(int &nStatus)
 {
     int nErr;
     char szResp[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
+	
 
     // OK_SMFC or OK_DMFC
     nErr = dmfcCommand("#\n", szResp, SERIAL_BUFFER_SIZE);
@@ -188,6 +244,10 @@ int CPegasusController::getConsolidatedStatus()
 {
     int nErr;
     char szResp[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
+	
 
     nErr = dmfcCommand("A\n", szResp, SERIAL_BUFFER_SIZE);
     if(nErr)
@@ -223,6 +283,12 @@ int CPegasusController::getConsolidatedStatus()
         if (m_bDebugLog && m_pLogger) {
             snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getConsolidatedStatus] nError: %s\n%s\n",e.what(), szResp);
             m_pLogger->out(m_szLogBuffer);
+#ifdef PEGA_DEBUG
+			ltime = time(NULL);
+			timestamp = asctime(localtime(&ltime));
+			timestamp[strlen(timestamp) - 1] = 0;
+			fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus error getting Consolidated status : %s\n%s\n", timestamp, e.what(), szResp);
+#endif
         }
     }
     return nErr;
@@ -233,6 +299,10 @@ int CPegasusController::getMotoMaxSpeed(int &nSpeed)
     int nErr;
     char szResp[SERIAL_BUFFER_SIZE];
     std::vector<std::string> sParsedResp;
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
+	
 
     nErr = dmfcCommand("B\n", szResp, SERIAL_BUFFER_SIZE);
     if(nErr)
@@ -258,6 +328,9 @@ int CPegasusController::setMotoMaxSpeed(int nSpeed)
     int nErr;
     char szCmd[SERIAL_BUFFER_SIZE];
 
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
+	
     sprintf(szCmd,"S%d\n", nSpeed);
     nErr = dmfcCommand(szCmd, NULL, 0);
 
@@ -267,7 +340,10 @@ int CPegasusController::setMotoMaxSpeed(int nSpeed)
 int CPegasusController::getBacklashComp(int &nSteps)
 {
     int nErr;
-
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
+	
     nErr = getConsolidatedStatus();
     nSteps = m_globalStatus.nBacklash;
 
@@ -278,7 +354,10 @@ int CPegasusController::setBacklashComp(int nSteps)
 {
     int nErr = DMFC_OK;
     char szCmd[SERIAL_BUFFER_SIZE];
-
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
+	
     sprintf(szCmd,"C%d\n", nSteps);
     nErr = dmfcCommand(szCmd, NULL, 0);
     if(!nErr)
@@ -293,6 +372,9 @@ int CPegasusController::setEnableRotaryEncoder(bool bEnabled)
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
     char szCmd[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     if(bEnabled)
         sprintf(szCmd,"E%d\n", R_ON);
@@ -307,6 +389,9 @@ int CPegasusController::setEnableRotaryEncoder(bool bEnabled)
 int CPegasusController::getEnableRotaryEncoder(bool &bEnabled)
 {
     int nErr;
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     nErr = getConsolidatedStatus();
     bEnabled = m_globalStatus.bEncodeEnabled;
@@ -318,6 +403,9 @@ int CPegasusController::getFirmwareVersion(char *pszVersion, int nStrMaxLen)
 {
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
@@ -334,6 +422,9 @@ int CPegasusController::getTemperature(double &dTemperature)
 {
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     nErr = dmfcCommand("T\n", szResp, SERIAL_BUFFER_SIZE);
     if(nErr)
@@ -357,6 +448,9 @@ int CPegasusController::getPosition(int &nPosition)
 {
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     nErr = dmfcCommand("P\n", szResp, SERIAL_BUFFER_SIZE);
     if(nErr)
@@ -382,6 +476,9 @@ int CPegasusController::getLedStatus(int &nStatus)
     int nLedStatus = 0;
     char szResp[SERIAL_BUFFER_SIZE];
     std::vector<std::string> sParsedResp;
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
 
     nErr = dmfcCommand("P\n", szResp, SERIAL_BUFFER_SIZE);
@@ -415,6 +512,9 @@ int CPegasusController::setLedStatus(int nStatus)
 {
     int nErr = DMFC_OK;
     char szCmd[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     switch (nStatus) {
         case ON:
@@ -436,6 +536,9 @@ int CPegasusController::getMotorType(int &nType)
 {
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     nType = m_globalStatus.nMotorType;
     nErr = dmfcCommand("R\n", szResp, SERIAL_BUFFER_SIZE);
@@ -459,6 +562,9 @@ int CPegasusController::getMotorType(int &nType)
 int CPegasusController::setMotorType(int nType)
 {
     int nErr = DMFC_OK;
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     if(m_globalStatus.nDeviceType == DMFC) {
         switch (nType) {
@@ -482,6 +588,9 @@ int CPegasusController::setMotorType(int nType)
 int CPegasusController::getMotorDirection(int &nDir)
 {
     int nErr = DMFC_OK;
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     nErr = getConsolidatedStatus();
     if(m_globalStatus.bReverse) {
@@ -499,6 +608,9 @@ int CPegasusController::setMotorDirection(int nDir)
     int nErr;
     char szResp[SERIAL_BUFFER_SIZE];
     char szCmd[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     snprintf(szCmd, SERIAL_BUFFER_SIZE, "N%d\n", nDir);
     nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
@@ -519,6 +631,9 @@ int CPegasusController::syncMotorPosition(int nPos)
 {
     int nErr = DMFC_OK;
     char szCmd[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     snprintf(szCmd, SERIAL_BUFFER_SIZE, "W%d\n", nPos);
     nErr = dmfcCommand(szCmd, NULL, 0);
@@ -529,6 +644,9 @@ int CPegasusController::getRotaryEncPos(int &nPos)
 {
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     nErr = dmfcCommand("X\n", szResp, SERIAL_BUFFER_SIZE);
     if(nErr)
@@ -551,8 +669,19 @@ int CPegasusController::getRotaryEncPos(int &nPos)
 int CPegasusController::getDeviceType(int &nDevice)
 {
     int nErr;
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     nErr = getConsolidatedStatus();
+#ifdef PEGA_DEBUG
+	if(nErr) {
+		ltime = time(NULL);
+		timestamp = asctime(localtime(&ltime));
+		timestamp[strlen(timestamp) - 1] = 0;
+		fprintf(Logfile, "[%s] CPegasusController::Connect error getting Consolidated status : %d\n", timestamp, nErr);
+	}
+#endif
     nDevice = m_globalStatus.nDeviceType;
 
     return nErr;
@@ -584,6 +713,9 @@ int CPegasusController::setReverseEnable(bool bEnabled)
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
     char szCmd[SERIAL_BUFFER_SIZE];
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     if(bEnabled)
         sprintf(szCmd,"N%d\n", REVERSE);
@@ -598,6 +730,9 @@ int CPegasusController::setReverseEnable(bool bEnabled)
 int CPegasusController::getReverseEnable(bool &bEnabled)
 {
     int nErr;
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     nErr = getConsolidatedStatus();
     bEnabled = m_globalStatus.bReverse;
@@ -613,6 +748,9 @@ int CPegasusController::dmfcCommand(const char *pszszCmd, char *pszResult, int n
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
     unsigned long  ulBytesWrite;
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     m_pSerx->purgeTxRx();
     if (m_bDebugLog && m_pLogger) {
@@ -644,6 +782,12 @@ int CPegasusController::dmfcCommand(const char *pszszCmd, char *pszResult, int n
                 m_pLogger->out(m_szLogBuffer);
             }
         }
+#ifdef PEGA_DEBUG
+		ltime = time(NULL);
+		timestamp = asctime(localtime(&ltime));
+		timestamp[strlen(timestamp) - 1] = 0;
+		fprintf(Logfile, "[%s] CPegasusController::dmfcCommand response \"%s\"\n", timestamp, szResp);
+#endif
         // printf("Got response : %s\n",resp);
         strncpy(pszResult, szResp, nResultMaxLen);
     }
@@ -656,6 +800,9 @@ int CPegasusController::readResponse(char *pszRespBuffer, int nBufferLen)
     unsigned long ulBytesRead = 0;
     unsigned long ulTotalBytesRead = 0;
     char *pszBufPtr;
+	
+	if(!m_bIsConnected)
+		return ERR_COMMNOLINK;
 
     memset(pszRespBuffer, 0, (size_t) nBufferLen);
     pszBufPtr = pszRespBuffer;
@@ -680,7 +827,7 @@ int CPegasusController::readResponse(char *pszRespBuffer, int nBufferLen)
                 snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CNexDome::readResponse] readFile Timeout.\n");
                 m_pLogger->out(m_szLogBuffer);
             }
-            nErr = DMFC_BAD_CMD_RESPONSE;
+            nErr = ERR_NORESPONSE;
             break;
         }
         ulTotalBytesRead += ulBytesRead;
@@ -701,6 +848,13 @@ int CPegasusController::parseResp(char *pszResp, std::vector<std::string>  &svPa
     std::string sSegment;
     std::vector<std::string> svSeglist;
     std::stringstream ssTmpGinf(pszResp);
+
+#ifdef PEGA_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] CPegasusController::parseResp parsing \"%s\"\n", timestamp, pszResp);
+#endif
 
     std::cout << "tmpGinf = " << ssTmpGinf.str() << "\n";
     // split the string into vector elements
