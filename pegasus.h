@@ -14,6 +14,10 @@
 #include <sstream>
 #include <iostream>
 
+#include <exception>
+#include <typeinfo>
+#include <stdexcept>
+
 #include "../../licensedinterfaces/sberrorx.h"
 #include "../../licensedinterfaces/serxinterface.h"
 #include "../../licensedinterfaces/loggerinterface.h"
@@ -31,7 +35,7 @@
 #endif
 
 
-#define SERIAL_BUFFER_SIZE 20
+#define SERIAL_BUFFER_SIZE 256
 #define MAX_TIMEOUT 1000
 #define LOG_BUFFER_SIZE 256
 
