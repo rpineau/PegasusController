@@ -26,11 +26,11 @@
 
 #ifdef PEGA_DEBUG
 #if defined(SB_WIN_BUILD)
-#define PEGA_LOGFILENAME "C:\\PegausLog.txt"
+#define PEGA_LOGFILENAME "C:\\PegasusLog.txt"
 #elif defined(SB_LINUX_BUILD)
-#define PEGA_LOGFILENAME "/tmp/PegausLog.txt"
+#define PEGA_LOGFILENAME "/tmp/PegasusLog.txt"
 #elif defined(SB_MAC_BUILD)
-#define PEGA_LOGFILENAME "/tmp/PegausLog.txt"
+#define PEGA_LOGFILENAME "/tmp/PegasusLog.txt"
 #endif
 #endif
 

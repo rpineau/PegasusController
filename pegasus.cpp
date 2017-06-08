@@ -295,8 +295,16 @@ int CPegasusController::getConsolidatedStatus()
 	fflush(Logfile);
 #endif
     try {
-		if(m_svParsedRespForA.empty())
+		if(m_svParsedRespForA.empty()) {
+#ifdef PEGA_DEBUG
+			ltime = time(NULL);
+			timestamp = asctime(localtime(&ltime));
+			timestamp[strlen(timestamp) - 1] = 0;
+			fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus parsing returned an empty vector\n", timestamp);
+			fflush(Logfile);
+#endif
 			return DMFC_BAD_CMD_RESPONSE;
+		}
         if(m_svParsedRespForA[fSTATUS].find("OK_")) {
             m_globalStatus.bReady = true;
             if(strstr(szResp,"OK_SMFC")) {
@@ -987,17 +995,16 @@ int CPegasusController::readResponse(char *pszRespBuffer, int nBufferLen)
         }
     } while (*pszBufPtr++ != '\n' && ulTotalBytesRead < nBufferLen );
 
-    *pszBufPtr = 0; //remove the \n
+    *(pszBufPtr-1) = 0; //remove the \n
     return nErr;
 }
 
 
 int CPegasusController::parseResp(char *pszResp, std::vector<std::string>  &svParsedResp)
 {
-    int n;
     std::string sSegment;
     std::vector<std::string> svSeglist;
-    std::stringstream ssTmpGinf(pszResp);
+    std::stringstream ssTmp(pszResp);
 
 #ifdef PEGA_DEBUG
 	ltime = time(NULL);
@@ -1007,19 +1014,13 @@ int CPegasusController::parseResp(char *pszResp, std::vector<std::string>  &svPa
 	fflush(Logfile);
 #endif
 	svParsedResp.clear();
-    std::cout << "tmpGinf = " << ssTmpGinf.str() << "\n";
     // split the string into vector elements
-    while(std::getline(ssTmpGinf, sSegment, ','))
+    while(std::getline(ssTmp, sSegment, ':'))
     {
         svSeglist.push_back(sSegment);
     }
     // do we have all the fields ?
-    if (svSeglist[0] == "V1")
-        n =9;
-    else
-        n = 25;
-
-    if(svSeglist.size() < n)
+    if (svSeglist.size()<10)
         return DMFC_BAD_CMD_RESPONSE;
 
     svParsedResp = svSeglist;
