@@ -240,6 +240,8 @@ int	X2Focuser::execModalSettingsDialog(void)
     if (NULL == (dx = uiutil.X2DX()))
         return ERR_POINTER;
 
+    X2MutexLocker ml(GetMutex());
+
 	// set controls values
     if(m_bLinked) {
         // get data from device
@@ -360,9 +362,6 @@ int	X2Focuser::execModalSettingsDialog(void)
     else
         dx->setChecked("limitEnable", false);
 
-
-    X2MutexLocker ml(GetMutex());
-
     //Display the user interface
     mUiEnabled = true;
     if ((nErr = ui->exec(bPressedOK)))
@@ -376,7 +375,7 @@ int	X2Focuser::execModalSettingsDialog(void)
         bLimitEnabled = dx->isChecked("limitEnable");
         dx->propertyInt("posLimit", "value", nPosLimit);
         if(bLimitEnabled && nPosLimit>0) { // a position limit of 0 doesn't make sense :)
-            m_PegasusController.setPosLimit(nPosition);
+            m_PegasusController.setPosLimit(nPosLimit);
             m_PegasusController.enablePosLimit(bLimitEnabled);
         } else {
             m_PegasusController.enablePosLimit(false);
@@ -419,8 +418,8 @@ int	X2Focuser::execModalSettingsDialog(void)
 				return nErr;
 		}
         // save values to config
-        nErr |= m_pIniUtil->writeInt(PARENT_KEY, POS_LIMIT, bLimitEnabled);
-        nErr |= m_pIniUtil->writeInt(PARENT_KEY, POS_LIMIT_ENABLED, nPosLimit);
+        nErr |= m_pIniUtil->writeInt(PARENT_KEY, POS_LIMIT, nPosLimit);
+        nErr |= m_pIniUtil->writeInt(PARENT_KEY, POS_LIMIT_ENABLED, bLimitEnabled);
     }
     return nErr;
 }

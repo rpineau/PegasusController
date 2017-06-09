@@ -43,8 +43,6 @@ CPegasusController::CPegasusController()
 
 CPegasusController::~CPegasusController()
 {
-    if(m_bIsConnected && m_pSerx)
-        m_pSerx->close();
 #ifdef	PEGA_DEBUG
 	// Close LogFile
 	if (Logfile) fclose(Logfile);
