@@ -18,15 +18,15 @@ if [ ! -d "$TheSkyX_Path" ]; then
 fi
 
 cp "./focuserlist PegasusController.txt" "$TheSkyX_Path/Resources/Common/Miscellaneous Files/"
-cp "./PegasusController.ui" "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugins/"
-cp "./PegasusAstro.png" "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugins/"
-cp "./libPegasusController.so" "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugins/"
+cp "./PegasusController.ui" "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugIns/"
+cp "./PegasusAstro.png" "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugIns/"
+cp "./libPegasusController.so" "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugIns/"
 
 app_owner=`/usr/bin/stat -c "%u" "$TheSkyX_Path" | xargs id -n -u`
 if [ ! -z "$app_owner" ]; then
 	chown $app_owner "$TheSkyX_Path/Resources/Common/Miscellaneous Files/focuserlist PegasusController.txt"
-	chown $app_owner "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugins/PegasusController.ui"
-	chown $app_owner "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugins/PegasusAstro.png"
-	chown $app_owner "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugins/libPegasusController.so"
+	chown $app_owner "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugIns/PegasusController.ui"
+	chown $app_owner "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugIns/PegasusAstro.png"
+	chown $app_owner "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugIns/libPegasusController.so"
 fi
-chmod  755 "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugins/libPegasusController.so"
+chmod  755 "$TheSkyX_Path/Resources/Common/PlugInsARM32/FocuserPlugIns/libPegasusController.so"
