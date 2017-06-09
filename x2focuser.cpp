@@ -41,7 +41,7 @@ X2Focuser::X2Focuser(const char* pszDisplayName,
     if (m_pIniUtil) {
         m_PegasusController.setPosLimit(m_pIniUtil->readInt(PARENT_KEY, POS_LIMIT, 0));
         m_PegasusController.enablePosLimit(m_pIniUtil->readInt(PARENT_KEY, POS_LIMIT_ENABLED, false));
-        m_bReverseEnabled = m_pIniUtil->readInt(PARENT_KEY, POS_LIMIT_ENABLED, false);
+        m_bReverseEnabled = m_pIniUtil->readInt(PARENT_KEY, REVERSE_ENABLED, false);
     }
 	m_PegasusController.SetSerxPointer(m_pSerX);
 	m_PegasusController.setLogger(m_pLogger);
