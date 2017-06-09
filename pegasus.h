@@ -22,7 +22,7 @@
 #include "../../licensedinterfaces/serxinterface.h"
 #include "../../licensedinterfaces/loggerinterface.h"
 
-#define PEGA_DEBUG
+// #define PEGA_DEBUG
 
 #ifdef PEGA_DEBUG
 #if defined(SB_WIN_BUILD)
