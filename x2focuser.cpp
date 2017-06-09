@@ -441,10 +441,10 @@ void X2Focuser::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             return;
         }
     }
-    // max new
+    // new position
     else if (!strcmp(pszEvent, "on_pushButtonSet2_clicked")) {
         uiex->propertyInt("newPos", "value", nTmpVal);
-        nErr = m_PegasusController.setMotoMaxSpeed(nTmpVal);
+        nErr = m_PegasusController.syncMotorPosition(nTmpVal);
         if(nErr) {
             snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error setting new position : Error %d", nErr);
             uiex->messageBox("Set New Position", szErrorMessage);
