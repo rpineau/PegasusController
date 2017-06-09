@@ -191,7 +191,6 @@ int CPegasusController::isGoToComplete(bool &bComplete)
 	
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
-	
 
     getPosition(m_globalStatus.nCurPos);
     if(m_globalStatus.nCurPos == m_nTargetPos)
@@ -255,7 +254,6 @@ int CPegasusController::getStatus(int &nStatus)
 	
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
-	
 
     // OK_SMFC or OK_DMFC
     nErr = dmfcCommand("#\n", szResp, SERIAL_BUFFER_SIZE);
@@ -285,7 +283,6 @@ int CPegasusController::getConsolidatedStatus()
 	
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
-	
 
     nErr = dmfcCommand("A\n", szResp, SERIAL_BUFFER_SIZE);
     if(nErr)
@@ -391,7 +388,6 @@ int CPegasusController::getMotoMaxSpeed(int &nSpeed)
 	
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
-	
 
     nErr = dmfcCommand("B\n", szResp, SERIAL_BUFFER_SIZE);
     if(nErr)
@@ -459,6 +455,7 @@ int CPegasusController::setBacklashComp(int nSteps)
 	
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
+
 #ifdef PEGA_DEBUG
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
@@ -622,7 +619,6 @@ int CPegasusController::getLedStatus(int &nStatus)
 	
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
-
 
     nErr = dmfcCommand("P\n", szResp, SERIAL_BUFFER_SIZE);
     if(nErr)
@@ -892,6 +888,17 @@ int CPegasusController::getReverseEnable(bool &bEnabled)
     return nErr;
 }
 
+void CPegasusController::debugLinked(void)
+{
+#ifdef PEGA_DEBUG
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CPegasusController::debugLinked **** ERROR **** m_bLinked is false !!!!!! \n", timestamp);
+        fflush(Logfile);
+#endif
+
+}
 
 #pragma mark command and response functions
 

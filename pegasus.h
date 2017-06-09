@@ -138,6 +138,8 @@ public:
     int         setReverseEnable(bool bEnabled);
     int         getReverseEnable(bool &bEnabled);
 
+    void        debugLinked(void);
+
 protected:
 
     int             dmfcCommand(const char *pszCmd, char *pszResult, int nResultMaxLen);

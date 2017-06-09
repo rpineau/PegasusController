@@ -35,11 +35,13 @@ X2Focuser::X2Focuser(const char* pszDisplayName,
 	m_bLinked = false;
 	m_nPosition = 0;
     m_fLastTemp = -273.15f; // aboslute zero :)
+    m_bReverseEnabled = false;
 
     // Read in settings
     if (m_pIniUtil) {
         m_PegasusController.setPosLimit(m_pIniUtil->readInt(PARENT_KEY, POS_LIMIT, 0));
         m_PegasusController.enablePosLimit(m_pIniUtil->readInt(PARENT_KEY, POS_LIMIT_ENABLED, false));
+        m_bReverseEnabled = m_pIniUtil->readInt(PARENT_KEY, POS_LIMIT_ENABLED, false);
     }
 	m_PegasusController.SetSerxPointer(m_pSerX);
 	m_PegasusController.setLogger(m_pLogger);
@@ -110,15 +112,15 @@ double X2Focuser::driverInfoVersion(void) const
 void X2Focuser::deviceInfoNameShort(BasicStringInterface& str) const
 {
     int deviceType;
+    X2Focuser* pMe = (X2Focuser*)this;
+
+    X2MutexLocker ml(pMe->GetMutex());
+
 
     if(!m_bLinked) {
         str="NA";
     }
     else {
-        X2Focuser* pMe = (X2Focuser*)this;
-
-        X2MutexLocker ml(pMe->GetMutex());
-
         pMe->m_PegasusController.getDeviceType(deviceType);
 
         if(deviceType == DMFC)
@@ -140,6 +142,8 @@ void X2Focuser::deviceInfoDetailedDescription(BasicStringInterface& str) const
 
 void X2Focuser::deviceInfoFirmwareVersion(BasicStringInterface& str)				
 {
+    X2MutexLocker ml(GetMutex());
+
     if(!m_bLinked) {
         str="NA";
     }
@@ -153,12 +157,12 @@ void X2Focuser::deviceInfoFirmwareVersion(BasicStringInterface& str)
 
 void X2Focuser::deviceInfoModel(BasicStringInterface& str)							
 {
+    X2MutexLocker ml(GetMutex());
+
     if(!m_bLinked) {
         str="NA";
     }
     else {
-        X2MutexLocker ml(GetMutex());
-
         // get model version
         int deviceType;
 
@@ -184,6 +188,9 @@ int	X2Focuser::establishLink(void)
         m_bLinked = false;
     else
         m_bLinked = true;
+
+    if(m_bLinked)
+        err = m_PegasusController.setReverseEnable(m_bReverseEnabled);
 
     return err;
 }
@@ -229,8 +236,6 @@ int	X2Focuser::execModalSettingsDialog(void)
     bool bStepperEnable = false;
     bool bReverse = false;
 
-    mUiEnabled = false;
-
     if (NULL == ui)
         return ERR_POINTER;
 
@@ -242,6 +247,10 @@ int	X2Focuser::execModalSettingsDialog(void)
 
     X2MutexLocker ml(GetMutex());
 
+    if(!m_bLinked) {
+        // log this
+        m_PegasusController.debugLinked();
+    }
 	// set controls values
     if(m_bLinked) {
         // get data from device
@@ -264,7 +273,7 @@ int	X2Focuser::execModalSettingsDialog(void)
         dx->setEnabled("pushButton_2", true);
         dx->setPropertyInt("newPos", "value", nPosition);
 
-        // reverse  reverseDir
+        // reverse
         dx->setEnabled("reverseDir", true);
         nErr = m_PegasusController.getReverseEnable(bReverse);
         if(bReverse)
@@ -325,7 +334,7 @@ int	X2Focuser::execModalSettingsDialog(void)
         }
     }
     else {
-        // disable all controls
+        // disable unsued controls when not connected
         dx->setEnabled("maxSpeed", false);
         dx->setPropertyInt("maxSpeed", "value", 0);
         dx->setEnabled("pushButton", false);
@@ -351,10 +360,8 @@ int	X2Focuser::execModalSettingsDialog(void)
         dx->setChecked("limitEnable", false);
 
     //Display the user interface
-    mUiEnabled = true;
     if ((nErr = ui->exec(bPressedOK)))
         return nErr;
-    mUiEnabled = false;
 
     //Retreive values from the user interface
     if (bPressedOK) {
@@ -375,6 +382,10 @@ int	X2Focuser::execModalSettingsDialog(void)
 			nErr = m_PegasusController.setReverseEnable(bReverse);
 			if(nErr)
 				return nErr;
+            // save value to config
+            nErr = m_pIniUtil->writeInt(PARENT_KEY, REVERSE_ENABLED, bReverse);
+            if(nErr)
+                return nErr;
 
 			// get backlash if enable, disbale if needed
 			bBacklashEnabled = dx->isChecked("backlashEnable");
@@ -548,6 +559,8 @@ int	X2Focuser::amountIndexFocGoto(void)
 int X2Focuser::focTemperature(double &dTemperature)
 {
     int err;
+
+    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked) {
         dTemperature = -100.0;

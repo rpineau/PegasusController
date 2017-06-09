@@ -28,6 +28,7 @@ class TickCountInterface;
 #define CHILD_KEY_PORTNAME	"PortName"
 #define POS_LIMIT           "PosLimit"
 #define POS_LIMIT_ENABLED   "PosLimitEnable"
+#define REVERSE_ENABLED     "ReverseEnable"
 
 #if defined(SB_WIN_BUILD)
 #define DEF_PORT_NAME					"COM1"
@@ -158,7 +159,7 @@ private:
 	int                                     m_nPosition;
     double                                  m_fLastTemp;
     CPegasusController                      m_PegasusController;
-    bool                                    mUiEnabled;
+    bool                                    m_bReverseEnabled;
 
 };
 
