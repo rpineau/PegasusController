@@ -384,7 +384,7 @@ int CPegasusController::getMotoMaxSpeed(int &nSpeed)
 {
     int nErr;
     char szResp[SERIAL_BUFFER_SIZE];
-    std::vector<std::string> sParsedResp;
+    std::vector<std::string> svParsedResp;
 	
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
@@ -394,9 +394,18 @@ int CPegasusController::getMotoMaxSpeed(int &nSpeed)
         return nErr;
 
     // parse response
-    nErr = parseResp(szResp, sParsedResp);
+    svParsedResp.clear();
+    nErr = parseResp(szResp, svParsedResp);
     try {
-        nSpeed = atoi(sParsedResp[1].c_str());
+#ifdef PEGA_DEBUG
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CPegasusController::getMotoMaxSpeed sParsedResp length : %lu\n", timestamp, svParsedResp.size());
+        fflush(Logfile);
+#endif
+
+        nSpeed = atoi(svParsedResp[1].c_str());
     } catch (const std::exception& e) {
         nErr = DMFC_BAD_CMD_RESPONSE;
         if (m_bDebugLog && m_pLogger) {
@@ -1036,11 +1045,17 @@ int CPegasusController::parseResp(char *pszResp, std::vector<std::string>  &svPa
     while(std::getline(ssTmp, sSegment, ':'))
     {
         svSeglist.push_back(sSegment);
+#ifdef PEGA_DEBUG
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CPegasusController::parseResp sSegment : %s\n", timestamp, sSegment.c_str());
+        fflush(Logfile);
+#endif
     }
-    // do we have all the fields ?
-    if (svSeglist.size()<10)
-        return DMFC_BAD_CMD_RESPONSE;
 
     svParsedResp = svSeglist;
+
+
     return DMFC_OK;
 }
