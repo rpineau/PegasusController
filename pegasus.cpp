@@ -146,7 +146,15 @@ int CPegasusController::gotoPosition(int nPos)
     if (m_bPosLimitEnabled && nPos>m_nPosLimit)
         return ERR_LIMITSEXCEEDED;
 
-    sprintf(szCmd,"M%d\n", nPos);
+#ifdef PEGA_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CPegasusController::gotoPosition moving to %d\n", timestamp, nPos);
+    fflush(Logfile);
+#endif
+
+    sprintf(szCmd,"M:%d\n", nPos);
     nErr = dmfcCommand(szCmd, NULL, 0);
     m_nTargetPos = nPos;
 
@@ -161,7 +169,15 @@ int CPegasusController::moveRelativeToPosision(int nSteps)
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
-    sprintf(szCmd,"G%d\n", nSteps);
+#ifdef PEGA_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CPegasusController::moveRelativeToPosision moving by %d steps\n", timestamp, nSteps);
+    fflush(Logfile);
+#endif
+
+    sprintf(szCmd,"G:%d\n", nSteps);
     nErr = dmfcCommand(szCmd, NULL, 0);
 
     return nErr;
@@ -417,7 +433,7 @@ int CPegasusController::setMotoMaxSpeed(int nSpeed)
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 	
-    sprintf(szCmd,"S%d\n", nSpeed);
+    sprintf(szCmd,"S:%d\n", nSpeed);
     nErr = dmfcCommand(szCmd, NULL, 0);
 
     return nErr;
@@ -443,8 +459,15 @@ int CPegasusController::setBacklashComp(int nSteps)
 	
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
-	
-    sprintf(szCmd,"C%d\n", nSteps);
+#ifdef PEGA_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CPegasusController::setBacklashComp setting backlash comp : %s\n", timestamp, szCmd);
+    fflush(Logfile);
+#endif
+
+    sprintf(szCmd,"C:%d\n", nSteps);
     nErr = dmfcCommand(szCmd, NULL, 0);
     if(!nErr)
         m_globalStatus.nBacklash = nSteps;
@@ -463,9 +486,17 @@ int CPegasusController::setEnableRotaryEncoder(bool bEnabled)
 		return ERR_COMMNOLINK;
 
     if(bEnabled)
-        sprintf(szCmd,"E%d\n", R_ON);
+        sprintf(szCmd,"E:%d\n", R_ON);
     else
-        sprintf(szCmd,"E%d\n", R_OFF);
+        sprintf(szCmd,"E:%d\n", R_OFF);
+
+#ifdef PEGA_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CPegasusController::setEnableRotaryEncoder setting rotary enable : %s\n", timestamp, szCmd);
+    fflush(Logfile);
+#endif
 
     nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
 
@@ -691,64 +722,28 @@ int CPegasusController::setMotorType(int nType)
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
+#ifdef PEGA_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CPegasusController::setMotorType setting motor type : %d\n", timestamp, nType);
+    fflush(Logfile);
+#endif
+
     if(m_globalStatus.nDeviceType == DMFC) {
         switch (nType) {
             case STEPPER:
-                nErr = dmfcCommand("R0\n", NULL, 0);
+                nErr = dmfcCommand("R:0\n", NULL, 0);
                 break;
             case DC:
-                nErr = dmfcCommand("R1\n", NULL, 0);
+                nErr = dmfcCommand("R:1\n", NULL, 0);
                 break;
 
             default:
                 break;
         }
     }
-    else {
-        nErr = COMMAND_FAILED;
-    }
-    return nErr;
-}
 
-int CPegasusController::getMotorDirection(int &nDir)
-{
-    int nErr = DMFC_OK;
-	
-	if(!m_bIsConnected)
-		return ERR_COMMNOLINK;
-
-    nErr = getConsolidatedStatus();
-    if(m_globalStatus.bReverse) {
-        nDir = REVERSE;
-    }
-    else {
-        nDir = NORMAL;
-    }
-
-    return nErr;
-}
-
-int CPegasusController::setMotorDirection(int nDir)
-{
-    int nErr;
-    char szResp[SERIAL_BUFFER_SIZE];
-    char szCmd[SERIAL_BUFFER_SIZE];
-	
-	if(!m_bIsConnected)
-		return ERR_COMMNOLINK;
-
-    snprintf(szCmd, SERIAL_BUFFER_SIZE, "N%d\n", nDir);
-    nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
-    if(nErr)
-        return nErr;
-
-    if(nDir == REVERSE) {
-        m_globalStatus.bReverse = true;
-    }
-    else {
-
-        m_globalStatus.bReverse = false;
-    }
     return nErr;
 }
 
@@ -760,7 +755,7 @@ int CPegasusController::syncMotorPosition(int nPos)
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
-    snprintf(szCmd, SERIAL_BUFFER_SIZE, "W%d\n", nPos);
+    snprintf(szCmd, SERIAL_BUFFER_SIZE, "W:%d\n", nPos);
     nErr = dmfcCommand(szCmd, NULL, 0);
     return nErr;
 }
@@ -783,20 +778,20 @@ int CPegasusController::getRotaryEncPos(int &nPos)
     } catch (const std::exception& e) {
         nErr = DMFC_BAD_CMD_RESPONSE;
         if (m_bDebugLog && m_pLogger) {
-            snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getPosition] Exception: %s\n%s\n",e.what(), szResp);
+            snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getRotaryEncPos] Exception: %s\n%s\n",e.what(), szResp);
             m_pLogger->out(m_szLogBuffer);
         }
 	} catch (...) {
 		nErr = DMFC_BAD_CMD_RESPONSE;
 		if (m_bDebugLog && m_pLogger) {
-			snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getPosition] Exception: %s\n",szResp);
+			snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getRotaryEncPos] Exception: %s\n",szResp);
 			m_pLogger->out(m_szLogBuffer);
 		}
 #ifdef PEGA_DEBUG
 		ltime = time(NULL);
 		timestamp = asctime(localtime(&ltime));
 		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::getPosition **** Exception ****  : %s\n", timestamp, szResp);
+		fprintf(Logfile, "[%s] CPegasusController::getRotaryEncPos **** Exception ****  : %s\n", timestamp, szResp);
 		fflush(Logfile);
 #endif
 	}
@@ -817,7 +812,7 @@ int CPegasusController::getDeviceType(int &nDevice)
 		ltime = time(NULL);
 		timestamp = asctime(localtime(&ltime));
 		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::Connect **** ERROR **** getting Consolidated status : %d\n", timestamp, nErr);
+		fprintf(Logfile, "[%s] CPegasusController::getDeviceType **** ERROR **** getting Device Type : %d\n", timestamp, nErr);
 		fflush(Logfile);
 	}
 #endif
@@ -857,11 +852,29 @@ int CPegasusController::setReverseEnable(bool bEnabled)
 		return ERR_COMMNOLINK;
 
     if(bEnabled)
-        sprintf(szCmd,"N%d\n", REVERSE);
+        sprintf(szCmd,"N:%d\n", REVERSE);
     else
-        sprintf(szCmd,"N%d\n", NORMAL);
+        sprintf(szCmd,"N:%d\n", NORMAL);
+
+#ifdef PEGA_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CPegasusController::setReverseEnable setting reverse : %s\n", timestamp, szCmd);
+    fflush(Logfile);
+#endif
 
     nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
+
+#ifdef PEGA_DEBUG
+    if(nErr) {
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CPegasusController::setReverseEnable **** ERROR **** setting reverse (\"%s\") : %d\n", timestamp, szCmd, nErr);
+        fflush(Logfile);
+    }
+#endif
 
     return nErr;
 }

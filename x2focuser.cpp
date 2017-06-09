@@ -265,6 +265,7 @@ int	X2Focuser::execModalSettingsDialog(void)
         dx->setPropertyInt("newPos", "value", nPosition);
 
         // reverse  reverseDir
+        dx->setEnabled("reverseDir", true);
         nErr = m_PegasusController.getReverseEnable(bReverse);
         if(bReverse)
             dx->setChecked("reverseDir", true);
@@ -365,6 +366,7 @@ int	X2Focuser::execModalSettingsDialog(void)
             m_PegasusController.setPosLimit(nPosLimit);
             m_PegasusController.enablePosLimit(bLimitEnabled);
         } else {
+            m_PegasusController.setPosLimit(nPosLimit);
             m_PegasusController.enablePosLimit(false);
         }
 		if(m_bLinked) {

@@ -123,9 +123,6 @@ public:
     int         getMotorType(int &nType);
     int         setMotorType(int nType);
 
-    int         getMotorDirection(int &nDir);
-    int         setMotorDirection(int nDir);
-
     int         syncMotorPosition(int nPos);
 
     int         getRotaryEncPos(int &nPos);  // same as getMotoMaxSpeed
