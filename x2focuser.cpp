@@ -253,7 +253,7 @@ int	X2Focuser::execModalSettingsDialog(void)
         if(nErr)
             return nErr;
         dx->setEnabled("maxSpeed", true);
-        dx->setEnabled("pushButtonSet1", true);
+        dx->setEnabled("pushButton", true);
         dx->setPropertyInt("maxSpeed", "value", nMaxSpeed);
 
         // new position (set to current )
@@ -261,7 +261,7 @@ int	X2Focuser::execModalSettingsDialog(void)
         if(nErr)
             return nErr;
         dx->setEnabled("newPos", true);
-        dx->setEnabled("pushButtonSet2", true);
+        dx->setEnabled("pushButton_2", true);
         dx->setPropertyInt("newPos", "value", nPosition);
 
         // reverse  reverseDir
@@ -327,30 +327,17 @@ int	X2Focuser::execModalSettingsDialog(void)
         // disable all controls
         dx->setEnabled("maxSpeed", false);
         dx->setPropertyInt("maxSpeed", "value", 0);
-        dx->setEnabled("pushButtonSet1", false);
+        dx->setEnabled("pushButton", false);
         dx->setEnabled("newPos", false);
         dx->setPropertyInt("newPos", "value", 0);
         dx->setEnabled("reverseDir", false);
-        dx->setEnabled("pushButtonSet2", false);
+        dx->setEnabled("pushButton_2", false);
         dx->setEnabled("backlashSteps", false);
         dx->setPropertyInt("backlashSteps", "value", 0);
         dx->setEnabled("backlashEnable", false);
         dx->setEnabled("checkBox", false);
         dx->setEnabled("radioButton", false);
         dx->setEnabled("radioButton_2", false);
-		
-		// testing
-		dx->setEnabled("maxSpeed", true);
-		dx->setEnabled("pushButtonSet1", true);
-		dx->setEnabled("newPos", true);
-		dx->setEnabled("pushButtonSet2", true);
-		dx->setEnabled("backlashSteps", true);
-		dx->setEnabled("backlashEnable", true);
-		dx->setEnabled("checkBox", true);
-		dx->setEnabled("radioButton", true);
-		dx->setEnabled("radioButton_2", true);
-		dx->setChecked("radioButton", true);
-
     }
 
     // linit is done in software so it's always enabled.
@@ -429,9 +416,9 @@ void X2Focuser::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
     int nErr = SB_OK;
     int nTmpVal;
     char szErrorMessage[LOG_BUFFER_SIZE];
-
+	
     // max speed
-    if (!strcmp(pszEvent, "on_pushButtonSet1_clicked")) {
+    if (!strcmp(pszEvent, "on_pushButton_clicked")) {
         uiex->propertyInt("maxSpeed", "value", nTmpVal);
         nErr = m_PegasusController.setMotoMaxSpeed(nTmpVal);
         if(nErr) {
@@ -441,7 +428,7 @@ void X2Focuser::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
         }
     }
     // new position
-    else if (!strcmp(pszEvent, "on_pushButtonSet2_clicked")) {
+    else if (!strcmp(pszEvent, "on_pushButton_2_clicked")) {
         uiex->propertyInt("newPos", "value", nTmpVal);
         nErr = m_PegasusController.syncMotorPosition(nTmpVal);
         if(nErr) {

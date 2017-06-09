@@ -135,19 +135,6 @@
         <number>999999</number>
        </property>
       </widget>
-      <widget class="QPushButton" name="pushButtonSet2">
-       <property name="geometry">
-        <rect>
-         <x>190</x>
-         <y>70</y>
-         <width>62</width>
-         <height>32</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Set</string>
-       </property>
-      </widget>
       <widget class="QLabel" name="label_2">
        <property name="geometry">
         <rect>
@@ -159,19 +146,6 @@
        </property>
        <property name="text">
         <string>New Position :</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="pushButtonSet1">
-       <property name="geometry">
-        <rect>
-         <x>190</x>
-         <y>30</y>
-         <width>62</width>
-         <height>32</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Set</string>
        </property>
       </widget>
       <widget class="QLabel" name="label">
@@ -198,6 +172,32 @@
        </property>
        <property name="maximum">
         <number>999999</number>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton">
+       <property name="geometry">
+        <rect>
+         <x>190</x>
+         <y>30</y>
+         <width>50</width>
+         <height>30</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Set</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton_2">
+       <property name="geometry">
+        <rect>
+         <x>190</x>
+         <y>70</y>
+         <width>50</width>
+         <height>30</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Set</string>
        </property>
       </widget>
      </widget>
