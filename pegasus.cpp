@@ -1022,8 +1022,10 @@ int CPegasusController::readResponse(char *pszRespBuffer, int nBufferLen)
             m_pLogger->out(m_szLogBuffer);
         }
     } while (*pszBufPtr++ != '\n' && ulTotalBytesRead < nBufferLen );
+
     if(ulTotalBytesRead)
         *(pszBufPtr-1) = 0; //remove the \n
+
     return nErr;
 }
 
