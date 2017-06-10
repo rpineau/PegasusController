@@ -481,7 +481,7 @@ int	X2Focuser::focMaximumLimit(int& nPosLimit)
         nPosLimit = m_PegasusController.getPosLimit();
     }
     else
-        nPosLimit = 99999999;
+        nPosLimit = 100000;
 
     return SB_OK;
 }
