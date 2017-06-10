@@ -247,10 +247,6 @@ int	X2Focuser::execModalSettingsDialog(void)
 
     X2MutexLocker ml(GetMutex());
 
-    if(!m_bLinked) {
-        // log this
-        m_PegasusController.debugLinked();
-    }
 	// set controls values
     if(m_bLinked) {
         // get data from device

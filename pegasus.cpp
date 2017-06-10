@@ -11,6 +11,7 @@
 #include <ctype.h>
 #include <memory.h>
 #include <string.h>
+#include <time.h>
 #ifdef SB_MAC_BUILD
 #include <unistd.h>
 #endif
@@ -1021,8 +1022,8 @@ int CPegasusController::readResponse(char *pszRespBuffer, int nBufferLen)
             m_pLogger->out(m_szLogBuffer);
         }
     } while (*pszBufPtr++ != '\n' && ulTotalBytesRead < nBufferLen );
-
-    *(pszBufPtr-1) = 0; //remove the \n
+    if(ulTotalBytesRead)
+        *(pszBufPtr-1) = 0; //remove the \n
     return nErr;
 }
 
