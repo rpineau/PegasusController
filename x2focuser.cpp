@@ -247,10 +247,6 @@ int	X2Focuser::execModalSettingsDialog(void)
 
     X2MutexLocker ml(GetMutex());
 
-    if(!m_bLinked) {
-        // log this
-        m_PegasusController.debugLinked();
-    }
 	// set controls values
     if(m_bLinked) {
         // get data from device
@@ -481,7 +477,7 @@ int	X2Focuser::focMaximumLimit(int& nPosLimit)
         nPosLimit = m_PegasusController.getPosLimit();
     }
     else
-        nPosLimit = 99999999;
+        nPosLimit = 100000;
 
     return SB_OK;
 }
