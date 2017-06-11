@@ -27,6 +27,7 @@ CPegasusController::CPegasusController()
     m_nTargetPos = 0;
     m_nPosLimit = 0;
     m_bPosLimitEnabled = false;
+    m_bAbborted = false;
     
     m_pSerx = NULL;
     m_pLogger = NULL;
