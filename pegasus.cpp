@@ -27,6 +27,7 @@ CPegasusController::CPegasusController()
     m_nTargetPos = 0;
     m_nPosLimit = 0;
     m_bPosLimitEnabled = false;
+    m_bAbborted = false;
     
     m_pSerx = NULL;
     m_pLogger = NULL;
@@ -132,8 +133,9 @@ int CPegasusController::haltFocuser()
 		return ERR_COMMNOLINK;
 
     nErr = dmfcCommand("H\n", NULL, 0);
-
-    return nErr;
+	m_bAbborted = true;
+	
+	return nErr;
 }
 
 int CPegasusController::gotoPosition(int nPos)
@@ -194,7 +196,12 @@ int CPegasusController::isGoToComplete(bool &bComplete)
 		return ERR_COMMNOLINK;
 
     getPosition(m_globalStatus.nCurPos);
-    if(m_globalStatus.nCurPos == m_nTargetPos)
+	if(m_bAbborted) {
+		bComplete = true;
+		m_nTargetPos = m_globalStatus.nCurPos;
+		m_bAbborted = false;
+	}
+    else if(m_globalStatus.nCurPos == m_nTargetPos)
         bComplete = true;
     else
         bComplete = false;

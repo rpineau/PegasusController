@@ -161,7 +161,8 @@ protected:
     int             m_nTargetPos;
     int             m_nPosLimit;
     bool            m_bPosLimitEnabled;
-
+	bool			m_bAbborted;
+	
 #ifdef PEGA_DEBUG
 	// timestamp for logs
 	char *timestamp;
