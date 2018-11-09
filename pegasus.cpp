@@ -68,13 +68,14 @@ int CPegasusController::Connect(const char *pszPort)
 #endif
 
     // 19200 8N1
-    if(m_pSerx->open(pszPort, 19200, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1") == 0)
+    nErr = m_pSerx->open(pszPort, 19200, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1");
+    if(nErr == 0)
         m_bIsConnected = true;
     else
         m_bIsConnected = false;
 
     if(!m_bIsConnected)
-        return ERR_COMMNOLINK;
+        return nErr;
 
 #ifdef PEGA_DEBUG
 	ltime = time(NULL);

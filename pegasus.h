@@ -22,7 +22,7 @@
 #include "../../licensedinterfaces/serxinterface.h"
 #include "../../licensedinterfaces/loggerinterface.h"
 
-// #define PEGA_DEBUG
+#define PEGA_DEBUG
 
 #ifdef PEGA_DEBUG
 #if defined(SB_WIN_BUILD)
@@ -33,7 +33,6 @@
 #define PEGA_LOGFILENAME "/tmp/PegasusLog.txt"
 #endif
 #endif
-
 
 #define SERIAL_BUFFER_SIZE 256
 #define MAX_TIMEOUT 1000
