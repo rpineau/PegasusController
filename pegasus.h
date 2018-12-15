@@ -34,7 +34,6 @@
 #endif
 #endif
 
-
 #define SERIAL_BUFFER_SIZE 256
 #define MAX_TIMEOUT 1000
 #define LOG_BUFFER_SIZE 256

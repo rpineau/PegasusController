@@ -68,13 +68,14 @@ int CPegasusController::Connect(const char *pszPort)
 #endif
 
     // 19200 8N1
-    if(m_pSerx->open(pszPort, 19200, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1") == 0)
+    nErr = m_pSerx->open(pszPort, 19200, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1");
+    if(nErr == 0)
         m_bIsConnected = true;
     else
         m_bIsConnected = false;
 
     if(!m_bIsConnected)
-        return ERR_COMMNOLINK;
+        return nErr;
 
 #ifdef PEGA_DEBUG
 	ltime = time(NULL);
@@ -221,35 +222,15 @@ int CPegasusController::isMotorMoving(bool &bMoving)
     nErr = dmfcCommand("I\n", szResp, SERIAL_BUFFER_SIZE);
     if(nErr)
         return nErr;
-    try {
-        if(atoi(szResp)) {
-            bMoving = true;
-            m_globalStatus.bMoving = MOVING;
-        }
-        else {
-            bMoving = false;
-            m_globalStatus.bMoving = IDLE;
-        }
-    } catch (const std::exception& e) {
-        nErr = DMFC_BAD_CMD_RESPONSE;
-        if (m_bDebugLog && m_pLogger) {
-            snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::isMotorMoving] Exception: %s\n%s\n",e.what(), szResp);
-            m_pLogger->out(m_szLogBuffer);
-        }
-	} catch (...) {
-		nErr = DMFC_BAD_CMD_RESPONSE;
-		if (m_bDebugLog && m_pLogger) {
-			snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::isMotorMoving] Exception: %s\n",szResp);
-			m_pLogger->out(m_szLogBuffer);
-		}
-#ifdef PEGA_DEBUG
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::isMotorMoving **** Exception ****  : %s\n", timestamp, szResp);
-		fflush(Logfile);
-#endif
-	}
+
+    if(atoi(szResp)) {
+        bMoving = true;
+        m_globalStatus.bMoving = MOVING;
+    }
+    else {
+        bMoving = false;
+        m_globalStatus.bMoving = IDLE;
+    }
 
     return nErr;
 }
@@ -313,78 +294,78 @@ int CPegasusController::getConsolidatedStatus()
 	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus response parsing done\n", timestamp);
 	fflush(Logfile);
 #endif
-    try {
-		if(m_svParsedRespForA.empty()) {
+    if(m_svParsedRespForA.empty()) {
 #ifdef PEGA_DEBUG
-			ltime = time(NULL);
-			timestamp = asctime(localtime(&ltime));
-			timestamp[strlen(timestamp) - 1] = 0;
-			fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus parsing returned an empty vector\n", timestamp);
-			fflush(Logfile);
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus parsing returned an empty vector\n", timestamp);
+        fflush(Logfile);
 #endif
-			return DMFC_BAD_CMD_RESPONSE;
-		}
-        if(m_svParsedRespForA[fSTATUS].find("OK_")) {
-            m_globalStatus.bReady = true;
-            if(strstr(szResp,"OK_SMFC")) {
-                m_globalStatus.nDeviceType = SMFC;
-            }
-            else if(strstr(szResp,"OK_DMFC")) {
-                m_globalStatus.nDeviceType = DMFC;
-            }
-        }
-        else {
-            m_globalStatus.bReady = false;
-        }
-        strncpy(m_globalStatus.szVersion,  m_svParsedRespForA[fVERSIONS].c_str(), SERIAL_BUFFER_SIZE);
-        m_globalStatus.nMotorType = atoi(m_svParsedRespForA[fMOTOR_MODE].c_str());
-        m_globalStatus.dTemperature = atof(m_svParsedRespForA[fTEMP].c_str());
-        m_globalStatus.nCurPos = atoi(m_svParsedRespForA[fPOS].c_str());
-		if(m_svParsedRespForA.size()>5){ // SMFC seems to not have these fields
-			m_globalStatus.bMoving = atoi(m_svParsedRespForA[fMoving].c_str());
-			m_globalStatus.nLedStatus = atoi(m_svParsedRespForA[fLED].c_str());
-			m_globalStatus.bReverse = atoi(m_svParsedRespForA[fREVERSE].c_str());
-			m_globalStatus.bEncodeEnabled = atoi(m_svParsedRespForA[fDIS_ENC].c_str());
-			m_globalStatus.nBacklash = atoi(m_svParsedRespForA[fBACKLASH].c_str());
-		}
+        return DMFC_BAD_CMD_RESPONSE;
+    }
+
 #ifdef PEGA_DEBUG
-		else {
-			ltime = time(NULL);
-			timestamp = asctime(localtime(&ltime));
-			timestamp[strlen(timestamp) - 1] = 0;
-			fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus response is only 5 fields\n", timestamp);
-			fflush(Logfile);
-		}
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus Status = %s\n", timestamp, m_svParsedRespForA[fSTATUS].c_str());
+	fflush(Logfile);
 #endif
 
-    } catch (const std::exception& e) {
-        nErr = DMFC_BAD_CMD_RESPONSE;
-        if (m_bDebugLog && m_pLogger) {
-            snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getConsolidatedStatus] Exception: %s\n%s\n",e.what(), szResp);
-            m_pLogger->out(m_szLogBuffer);
+	if(m_svParsedRespForA[fSTATUS].find("OK_")!= -1) {
+        m_globalStatus.bReady = true;
+        if(m_svParsedRespForA[fSTATUS].find("SMFC")!= -1) {
+            m_globalStatus.nDeviceType = SMFC;
         }
-#ifdef PEGA_DEBUG
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus **** Exception **** getting Consolidated status : %s\n%s\n", timestamp, e.what(), szResp);
-		fflush(Logfile);
-#endif
-
-	} catch (...) {
-		nErr = DMFC_BAD_CMD_RESPONSE;
-		if (m_bDebugLog && m_pLogger) {
-			snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getConsolidatedStatus] Exception : %s\n",szResp);
-			m_pLogger->out(m_szLogBuffer);
+        else if(m_svParsedRespForA[fSTATUS].find("DMFC")!= -1) {
+            m_globalStatus.nDeviceType = DMFC;
 		}
+    }
+    else {
+        m_globalStatus.bReady = false;
+    }
+    strncpy(m_globalStatus.szVersion,  m_svParsedRespForA[fVERSIONS].c_str(), SERIAL_BUFFER_SIZE);
+    m_globalStatus.nMotorType = atoi(m_svParsedRespForA[fMOTOR_MODE].c_str());
+    m_globalStatus.dTemperature = atof(m_svParsedRespForA[fTEMP].c_str());
+    m_globalStatus.nCurPos = atoi(m_svParsedRespForA[fPOS].c_str());
+    if(m_svParsedRespForA.size()>5){ // SMFC seems to not have these fields
+        m_globalStatus.bMoving = atoi(m_svParsedRespForA[fMoving].c_str());
+        m_globalStatus.nLedStatus = atoi(m_svParsedRespForA[fLED].c_str());
+        m_globalStatus.bReverse = atoi(m_svParsedRespForA[fREVERSE].c_str());
+        m_globalStatus.bEncodeEnabled = atoi(m_svParsedRespForA[fDIS_ENC].c_str());
+        m_globalStatus.nBacklash = atoi(m_svParsedRespForA[fBACKLASH].c_str());
+    }
 #ifdef PEGA_DEBUG
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus **** Exception **** getting Consolidated status : %s\n", timestamp, szResp);
-		fflush(Logfile);
+    else {
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus response is only 5 fields\n", timestamp);
+        fflush(Logfile);
+    }
 #endif
+#ifdef PEGA_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus nDeviceType    : %d\n", timestamp, m_globalStatus.nDeviceType);
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus szVersion      : %s\n", timestamp, m_globalStatus.szVersion);
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus nMotorType     : %d\n", timestamp, m_globalStatus.nMotorType);
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus dTemperature   : %3.2f\n", timestamp, m_globalStatus.dTemperature);
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus nCurPos        : %d\n", timestamp, m_globalStatus.nCurPos);
+	if(m_svParsedRespForA.size()>5){
+		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus bMoving        : %s\n", timestamp, m_globalStatus.bMoving?"Yes":"No");
+		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus nLedStatus     : %d\n", timestamp, m_globalStatus.nLedStatus);
+		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus bReverse       : %s\n", timestamp, m_globalStatus.bReverse?"Yes":"No");
+		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus bEncodeEnabled : %s\n", timestamp, m_globalStatus.bEncodeEnabled?"Yes":"No");
+		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus nBacklash      : %d\n", timestamp, m_globalStatus.nBacklash);
 	}
+	fflush(Logfile);
+#endif
+
+	
     return nErr;
 }
 
@@ -404,36 +385,15 @@ int CPegasusController::getMotoMaxSpeed(int &nSpeed)
     // parse response
     svParsedResp.clear();
     nErr = parseResp(szResp, svParsedResp);
-    try {
 #ifdef PEGA_DEBUG
-        ltime = time(NULL);
-        timestamp = asctime(localtime(&ltime));
-        timestamp[strlen(timestamp) - 1] = 0;
-        fprintf(Logfile, "[%s] CPegasusController::getMotoMaxSpeed sParsedResp length : %lu\n", timestamp, svParsedResp.size());
-        fflush(Logfile);
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CPegasusController::getMotoMaxSpeed sParsedResp length : %lu\n", timestamp, svParsedResp.size());
+    fflush(Logfile);
 #endif
 
-        nSpeed = atoi(svParsedResp[1].c_str());
-    } catch (const std::exception& e) {
-        nErr = DMFC_BAD_CMD_RESPONSE;
-        if (m_bDebugLog && m_pLogger) {
-            snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getMotoMaxSpeed] Exception : %s\n%s\n",e.what(), szResp);
-            m_pLogger->out(m_szLogBuffer);
-        }
-	} catch (...) {
-		nErr = DMFC_BAD_CMD_RESPONSE;
-		if (m_bDebugLog && m_pLogger) {
-			snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getMotoMaxSpeed] Exception : %s\n",szResp);
-			m_pLogger->out(m_szLogBuffer);
-		}
-#ifdef PEGA_DEBUG
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::getMotoMaxSpeed **** Exception ****  : %s\n", timestamp, szResp);
-		fflush(Logfile);
-#endif
-	}
+    nSpeed = atoi(svParsedResp[1].c_str());
 
     return nErr;
 }
@@ -562,28 +522,7 @@ int CPegasusController::getTemperature(double &dTemperature)
         return nErr;
 
     // convert response
-    try {
-        dTemperature = atof(szResp);
-    } catch (const std::exception& e) {
-        nErr = DMFC_BAD_CMD_RESPONSE;
-        if (m_bDebugLog && m_pLogger) {
-            snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getTemperature] Exception: %s\n%s\n",e.what(), szResp);
-            m_pLogger->out(m_szLogBuffer);
-        }
-	} catch (...) {
-		nErr = DMFC_BAD_CMD_RESPONSE;
-		if (m_bDebugLog && m_pLogger) {
-			snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getTemperature] Exception: %s\n",szResp);
-			m_pLogger->out(m_szLogBuffer);
-		}
-#ifdef PEGA_DEBUG
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::getTemperature **** Exception ****  : %s\n", timestamp, szResp);
-		fflush(Logfile);
-#endif
-	}
+    dTemperature = atof(szResp);
 
     return nErr;
 }
@@ -601,28 +540,7 @@ int CPegasusController::getPosition(int &nPosition)
         return nErr;
 
     // convert response
-    try {
-        nPosition = atoi(szResp);
-    } catch (const std::exception& e) {
-        nErr = DMFC_BAD_CMD_RESPONSE;
-        if (m_bDebugLog && m_pLogger) {
-            snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getPosition] Exception: %s\n%s\n",e.what(), szResp);
-            m_pLogger->out(m_szLogBuffer);
-        }
-	} catch (...) {
-		nErr = DMFC_BAD_CMD_RESPONSE;
-		if (m_bDebugLog && m_pLogger) {
-			snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getPosition] Exception: %s\n",szResp);
-			m_pLogger->out(m_szLogBuffer);
-		}
-#ifdef PEGA_DEBUG
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::getPosition **** Exception ****  : %s\n", timestamp, szResp);
-		fflush(Logfile);
-#endif
-	}
+    nPosition = atoi(szResp);
 
     return nErr;
 }
@@ -643,36 +561,15 @@ int CPegasusController::getLedStatus(int &nStatus)
 
     // parse response
     nErr = parseResp(szResp, sParsedResp);
-    try {
-        nLedStatus = atoi(sParsedResp[1].c_str());
-        switch(nLedStatus) {
-            case 0:
-                nStatus = OFF;
-                break;
-            case 1:
-                nStatus = ON;
-                break;
-        }
-    } catch (const std::exception& e) {
-        nErr = DMFC_BAD_CMD_RESPONSE;
-        if (m_bDebugLog && m_pLogger) {
-            snprintf(m_szLogBuffer, LOG_BUFFER_SIZE, "[CPegasusController::getLedStatus] Exception: %s\n%s\n", e.what(), szResp);
-            m_pLogger->out(m_szLogBuffer);
-        }
-	} catch (...) {
-		nErr = DMFC_BAD_CMD_RESPONSE;
-		if (m_bDebugLog && m_pLogger) {
-			snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getLedStatus] Exception: %s\n",szResp);
-			m_pLogger->out(m_szLogBuffer);
-		}
-#ifdef PEGA_DEBUG
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::getLedStatus **** Exception ****  : %s\n", timestamp, szResp);
-		fflush(Logfile);
-#endif
-	}
+    nLedStatus = atoi(sParsedResp[1].c_str());
+    switch(nLedStatus) {
+        case 0:
+            nStatus = OFF;
+            break;
+        case 1:
+            nStatus = ON;
+            break;
+    }
 
     return nErr;
 }
@@ -710,14 +607,30 @@ int CPegasusController::getMotorType(int &nType)
 		return ERR_COMMNOLINK;
 
     nType = m_globalStatus.nMotorType;
-    nErr = dmfcCommand("R\n", szResp, SERIAL_BUFFER_SIZE);
-    if(nErr)
-        return nErr;
+#ifdef PEGA_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] CPegasusController::setMotorType getting motor type, m_globalStatus.nMotorType : %d\n", timestamp, nType);
+	fflush(Logfile);
+#endif
 
-    if(strstr(szResp,"0")) {
+	nErr = dmfcCommand("R\n", szResp, SERIAL_BUFFER_SIZE);
+	if(nErr) {
+#ifdef PEGA_DEBUG
+		ltime = time(NULL);
+		timestamp = asctime(localtime(&ltime));
+		timestamp[strlen(timestamp) - 1] = 0;
+		fprintf(Logfile, "[%s] CPegasusController::setMotorType Error getting motor type : %s\n", timestamp, szResp);
+		fflush(Logfile);
+#endif
+        return nErr;
+	}
+
+	if(strstr(szResp,"1")) {
         nType = STEPPER;
     }
-    else if(strstr(szResp,"1")) {
+    else if(strstr(szResp,"0")) {
         nType = DC;
     }
     else {
@@ -746,10 +659,10 @@ int CPegasusController::setMotorType(int nType)
     if(m_globalStatus.nDeviceType == DMFC) {
         switch (nType) {
             case STEPPER:
-                nErr = dmfcCommand("R:0\n", NULL, 0);
+                nErr = dmfcCommand("R:1\n", NULL, 0);
                 break;
             case DC:
-                nErr = dmfcCommand("R:1\n", NULL, 0);
+                nErr = dmfcCommand("R:0\n", NULL, 0);
                 break;
 
             default:
@@ -786,28 +699,7 @@ int CPegasusController::getRotaryEncPos(int &nPos)
         return nErr;
 
     // convert response
-    try {
-        nPos = atoi(szResp);
-    } catch (const std::exception& e) {
-        nErr = DMFC_BAD_CMD_RESPONSE;
-        if (m_bDebugLog && m_pLogger) {
-            snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getRotaryEncPos] Exception: %s\n%s\n",e.what(), szResp);
-            m_pLogger->out(m_szLogBuffer);
-        }
-	} catch (...) {
-		nErr = DMFC_BAD_CMD_RESPONSE;
-		if (m_bDebugLog && m_pLogger) {
-			snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::getRotaryEncPos] Exception: %s\n",szResp);
-			m_pLogger->out(m_szLogBuffer);
-		}
-#ifdef PEGA_DEBUG
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::getRotaryEncPos **** Exception ****  : %s\n", timestamp, szResp);
-		fflush(Logfile);
-#endif
-	}
+    nPos = atoi(szResp);
 
     return nErr;
 }

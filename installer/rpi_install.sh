@@ -5,12 +5,19 @@ echo "TheSkyX_Install = $TheSkyX_Install"
 
 if [ ! -f "$TheSkyX_Install" ]; then
     echo TheSkyXInstallPath.txt not found
-    exit 1
+    TheSkyX_Path=`/usr/bin/find ~/ -maxdepth 3 -name TheSkyX`
+    if [ -d "$TheSkyX_Path" ]; then
+		TheSkyX_Path="${TheSkyX_Path}/Contents"
+    else
+	   echo TheSkyX application was not found.
+    	exit 1
+	 fi
+else
+	TheSkyX_Path=$(<"$TheSkyX_Install")
 fi
 
-
-TheSkyX_Path=$(<"$TheSkyX_Install")
 echo "Installing to $TheSkyX_Path"
+
 
 if [ ! -d "$TheSkyX_Path" ]; then
     echo TheSkyX Install dir not exist

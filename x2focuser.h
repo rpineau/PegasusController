@@ -22,7 +22,7 @@ class MutexInterface;
 class BasicIniUtilInterface;
 class TickCountInterface;
 
-#define DRIVER_VERSION      1.0
+#define DRIVER_VERSION      1.1
 
 #define PARENT_KEY			"DMFC"
 #define CHILD_KEY_PORTNAME	"PortName"
