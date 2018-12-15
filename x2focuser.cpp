@@ -323,7 +323,7 @@ int	X2Focuser::execModalSettingsDialog(void)
                     dx->setChecked("radioButton_2", true);
                 break;
 
-            default: // don't knpw, disable this part
+            default: // don't know, disable this part
                 dx->setEnabled("radioButton", false);
                 dx->setEnabled("radioButton_2", false);
                 break;

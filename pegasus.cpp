@@ -304,14 +304,23 @@ int CPegasusController::getConsolidatedStatus()
 #endif
         return DMFC_BAD_CMD_RESPONSE;
     }
-    if(m_svParsedRespForA[fSTATUS].find("OK_")) {
+
+#ifdef PEGA_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus Status = %s\n", timestamp, m_svParsedRespForA[fSTATUS].c_str());
+	fflush(Logfile);
+#endif
+
+	if(m_svParsedRespForA[fSTATUS].find("OK_")!= -1) {
         m_globalStatus.bReady = true;
-        if(strstr(szResp,"OK_SMFC")) {
+        if(m_svParsedRespForA[fSTATUS].find("SMFC")!= -1) {
             m_globalStatus.nDeviceType = SMFC;
         }
-        else if(strstr(szResp,"OK_DMFC")) {
+        else if(m_svParsedRespForA[fSTATUS].find("DMFC")!= -1) {
             m_globalStatus.nDeviceType = DMFC;
-        }
+		}
     }
     else {
         m_globalStatus.bReady = false;
@@ -336,7 +345,27 @@ int CPegasusController::getConsolidatedStatus()
         fflush(Logfile);
     }
 #endif
+#ifdef PEGA_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus nDeviceType    : %d\n", timestamp, m_globalStatus.nDeviceType);
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus szVersion      : %s\n", timestamp, m_globalStatus.szVersion);
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus nMotorType     : %d\n", timestamp, m_globalStatus.nMotorType);
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus dTemperature   : %3.2f\n", timestamp, m_globalStatus.dTemperature);
+	fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus nCurPos        : %d\n", timestamp, m_globalStatus.nCurPos);
+	if(m_svParsedRespForA.size()>5){
+		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus bMoving        : %s\n", timestamp, m_globalStatus.bMoving?"Yes":"No");
+		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus nLedStatus     : %d\n", timestamp, m_globalStatus.nLedStatus);
+		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus bReverse       : %s\n", timestamp, m_globalStatus.bReverse?"Yes":"No");
+		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus bEncodeEnabled : %s\n", timestamp, m_globalStatus.bEncodeEnabled?"Yes":"No");
+		fprintf(Logfile, "[%s] CPegasusController::getConsolidatedStatus nBacklash      : %d\n", timestamp, m_globalStatus.nBacklash);
+	}
+	fflush(Logfile);
+#endif
 
+	
     return nErr;
 }
 
@@ -578,14 +607,30 @@ int CPegasusController::getMotorType(int &nType)
 		return ERR_COMMNOLINK;
 
     nType = m_globalStatus.nMotorType;
-    nErr = dmfcCommand("R\n", szResp, SERIAL_BUFFER_SIZE);
-    if(nErr)
-        return nErr;
+#ifdef PEGA_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] CPegasusController::setMotorType getting motor type, m_globalStatus.nMotorType : %d\n", timestamp, nType);
+	fflush(Logfile);
+#endif
 
-    if(strstr(szResp,"0")) {
+	nErr = dmfcCommand("R\n", szResp, SERIAL_BUFFER_SIZE);
+	if(nErr) {
+#ifdef PEGA_DEBUG
+		ltime = time(NULL);
+		timestamp = asctime(localtime(&ltime));
+		timestamp[strlen(timestamp) - 1] = 0;
+		fprintf(Logfile, "[%s] CPegasusController::setMotorType Error getting motor type : %s\n", timestamp, szResp);
+		fflush(Logfile);
+#endif
+        return nErr;
+	}
+
+	if(strstr(szResp,"1")) {
         nType = STEPPER;
     }
-    else if(strstr(szResp,"1")) {
+    else if(strstr(szResp,"0")) {
         nType = DC;
     }
     else {
@@ -614,10 +659,10 @@ int CPegasusController::setMotorType(int nType)
     if(m_globalStatus.nDeviceType == DMFC) {
         switch (nType) {
             case STEPPER:
-                nErr = dmfcCommand("R:0\n", NULL, 0);
+                nErr = dmfcCommand("R:1\n", NULL, 0);
                 break;
             case DC:
-                nErr = dmfcCommand("R:1\n", NULL, 0);
+                nErr = dmfcCommand("R:0\n", NULL, 0);
                 break;
 
             default:
