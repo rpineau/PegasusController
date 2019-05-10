@@ -1,17 +1,5 @@
-#include <stdio.h>
-#include <string.h>
-#include "x2focuser.h"
 
-#include "../../licensedinterfaces/theskyxfacadefordriversinterface.h"
-#include "../../licensedinterfaces/sleeperinterface.h"
-#include "../../licensedinterfaces/loggerinterface.h"
-#include "../../licensedinterfaces/basiciniutilinterface.h"
-#include "../../licensedinterfaces/mutexinterface.h"
-#include "../../licensedinterfaces/basicstringinterface.h"
-#include "../../licensedinterfaces/tickcountinterface.h"
-#include "../../licensedinterfaces/serxinterface.h"
-#include "../../licensedinterfaces/sberrorx.h"
-#include "../../licensedinterfaces/serialportparams2interface.h"
+#include "x2focuser.h"
 
 X2Focuser::X2Focuser(const char* pszDisplayName, 
 												const int& nInstanceIndex,
@@ -554,7 +542,7 @@ int	X2Focuser::amountIndexFocGoto(void)
 #pragma mark - FocuserTemperatureInterface
 int X2Focuser::focTemperature(double &dTemperature)
 {
-    int err;
+    int err = SB_OK;
 
     X2MutexLocker ml(GetMutex());
 

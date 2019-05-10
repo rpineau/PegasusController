@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include "../../licensedinterfaces/basicstringinterface.h"
 #include "main.h"
-#include "x2focuser.h"
 
 
 

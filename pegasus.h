@@ -163,6 +163,7 @@ protected:
 	bool			m_bAbborted;
 	
 #ifdef PEGA_DEBUG
+	std::string m_sLogfilePath;
 	// timestamp for logs
 	char *timestamp;
 	time_t ltime;

@@ -3,11 +3,24 @@
 #ifndef __X2Focuser_H_
 #define __X2Focuser_H_
 
+#include <stdio.h>
+#include <string.h>
+
 #include "../../licensedinterfaces/focuserdriverinterface.h"
-#include "../../licensedinterfaces/serialportparams2interface.h"
 #include "../../licensedinterfaces/modalsettingsdialoginterface.h"
 #include "../../licensedinterfaces/focuser/focusertemperatureinterface.h"
 #include "../../licensedinterfaces/x2guiinterface.h"
+#include "../../licensedinterfaces/basicstringinterface.h"
+#include "../../licensedinterfaces/theskyxfacadefordriversinterface.h"
+#include "../../licensedinterfaces/sleeperinterface.h"
+#include "../../licensedinterfaces/loggerinterface.h"
+#include "../../licensedinterfaces/basiciniutilinterface.h"
+#include "../../licensedinterfaces/mutexinterface.h"
+#include "../../licensedinterfaces/basicstringinterface.h"
+#include "../../licensedinterfaces/tickcountinterface.h"
+#include "../../licensedinterfaces/serxinterface.h"
+#include "../../licensedinterfaces/serialportparams2interface.h"
+#include "../../licensedinterfaces/sberrorx.h"
 
 #include "StopWatch.h"
 #include "pegasus.h"
@@ -128,7 +141,7 @@ public:
     virtual bool                                isBaudRateFixed() const		{return true;}
 
     virtual SerXInterface::Parity               parity() const				{return SerXInterface::B_NOPARITY;}
-    virtual void                                setParity(const SerXInterface::Parity& parity){parity;};
+    virtual void                                setParity(const SerXInterface::Parity& parity){};
     virtual bool                                isParityFixed() const		{return true;}
 
 

@@ -32,8 +32,23 @@ CPegasusController::CPegasusController()
     m_pSerx = NULL;
     m_pLogger = NULL;
 
+
+#ifdef PEGA_DEBUG
+#if defined(SB_WIN_BUILD)
+	m_sLogfilePath = getenv("HOMEDRIVE");
+	m_sLogfilePath += getenv("HOMEPATH");
+	m_sLogfilePath += "\\PegasusLog.txt";
+#elif defined(SB_LINUX_BUILD)
+	m_sLogfilePath = getenv("HOME");
+	m_sLogfilePath += "/PegasusLog.txt";
+#elif defined(SB_MAC_BUILD)
+	m_sLogfilePath = getenv("HOME");
+	m_sLogfilePath += "/PegasusLog.txt";
+#endif
+	Logfile = fopen(m_sLogfilePath.c_str(), "w");
+#endif
+
 #ifdef	PEGA_DEBUG
-	Logfile = fopen(PEGA_LOGFILENAME, "w");
 	ltime = time(NULL);
 	char *timestamp = asctime(localtime(&ltime));
 	timestamp[strlen(timestamp) - 1] = 0;
