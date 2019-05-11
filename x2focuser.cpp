@@ -556,6 +556,11 @@ int X2Focuser::focTemperature(double &dTemperature)
         return NOT_CONNECTED;
     }
 
+    if(m_fLastTemp == -127) {
+        dTemperature = -100.0;
+        return err;
+    }
+        
     // Taken from Richard's Robofocus plugin code.
     // this prevent us from asking the temperature too often
     static CStopWatch timer;
