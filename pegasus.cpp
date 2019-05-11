@@ -195,7 +195,7 @@ int CPegasusController::moveRelativeToPosision(int nSteps)
     fprintf(Logfile, "[%s] CPegasusController::moveRelativeToPosision moving by %d steps\n", timestamp, nSteps);
     fflush(Logfile);
 #endif
-
+    m_nTargetPos = m_globalStatus.nCurPos + nSteps;
     sprintf(szCmd,"G:%d\n", nSteps);
     nErr = dmfcCommand(szCmd, NULL, 0);
 
