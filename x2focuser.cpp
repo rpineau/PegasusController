@@ -295,6 +295,11 @@ int	X2Focuser::execModalSettingsDialog(void)
         // device type
         nErr = m_PegasusController.getDeviceType(nPegasusDeviceType);
         switch(nPegasusDeviceType){
+            case FC:    // stepper only
+                dx->setChecked("radioButton", true);
+                dx->setEnabled("radioButton", false);
+                dx->setEnabled("radioButton_2", false);
+                break;
             case SMFC : // SMFC, disable this part
                 dx->setEnabled("radioButton", false);
                 dx->setEnabled("radioButton_2", false);
@@ -561,7 +566,10 @@ int X2Focuser::focTemperature(double &dTemperature)
         timer.Reset();
     }
 
-    dTemperature = m_fLastTemp;
+    if(m_fLastTemp == -127.0)
+        dTemperature = -100; // special TSX value to say that the temperature is not supported.
+    else
+        dTemperature = m_fLastTemp;
 
     return err;
 }

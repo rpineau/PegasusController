@@ -212,7 +212,15 @@ int CPegasusController::isGoToComplete(bool &bComplete)
 		return ERR_COMMNOLINK;
 
     getPosition(m_globalStatus.nCurPos);
-	if(m_bAbborted) {
+#ifdef PEGA_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CPegasusController::isGoToComplete m_globalStatus.nCurPos = %d steps\n", timestamp, m_globalStatus.nCurPos);
+    fprintf(Logfile, "[%s] CPegasusController::isGoToComplete m_nTargetPos = %d steps\n", timestamp, m_nTargetPos);
+    fflush(Logfile);
+#endif
+    if(m_bAbborted) {
 		bComplete = true;
 		m_nTargetPos = m_globalStatus.nCurPos;
 		m_bAbborted = false;
@@ -270,6 +278,9 @@ int CPegasusController::getStatus(int &nStatus)
         }
         else if(strstr(szResp,"OK_DMFC")) {
             m_globalStatus.nDeviceType = DMFC;
+        }
+        else if(strstr(szResp,"OK_DC")) {
+            m_globalStatus.nDeviceType = FC;
         }
         nStatus = DMFC_OK;
         nErr = DMFC_OK;
@@ -330,12 +341,15 @@ int CPegasusController::getConsolidatedStatus()
 
 	if(m_svParsedRespForA[fSTATUS].find("OK_")!= -1) {
         m_globalStatus.bReady = true;
-        if(m_svParsedRespForA[fSTATUS].find("SMFC")!= -1) {
+        if(m_svParsedRespForA[fSTATUS].find("_SMFC")!= -1) {
             m_globalStatus.nDeviceType = SMFC;
         }
-        else if(m_svParsedRespForA[fSTATUS].find("DMFC")!= -1) {
+        else if(m_svParsedRespForA[fSTATUS].find("_DMFC")!= -1) {
             m_globalStatus.nDeviceType = DMFC;
 		}
+        else if(m_svParsedRespForA[fSTATUS].find("_FC")!= -1) {
+            m_globalStatus.nDeviceType = FC;
+        }
     }
     else {
         m_globalStatus.bReady = false;
