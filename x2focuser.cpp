@@ -560,7 +560,7 @@ int X2Focuser::focTemperature(double &dTemperature)
     // this prevent us from asking the temperature too often
     static CStopWatch timer;
 
-    if(timer.GetElapsedSeconds() > 30.0f || m_fLastTemp < -99.0f) {
+    if(timer.GetElapsedSeconds() > 30.0f) {
         X2MutexLocker ml(GetMutex());
         err = m_PegasusController.getTemperature(m_fLastTemp);
         timer.Reset();
