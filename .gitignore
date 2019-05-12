@@ -9,3 +9,6 @@ Release
 *.pkg
 *.so
 *.zip
+*.VC.db
+*.exe
+*.VC.*
