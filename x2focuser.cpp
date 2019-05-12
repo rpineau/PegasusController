@@ -1,17 +1,5 @@
-#include <stdio.h>
-#include <string.h>
-#include "x2focuser.h"
 
-#include "../../licensedinterfaces/theskyxfacadefordriversinterface.h"
-#include "../../licensedinterfaces/sleeperinterface.h"
-#include "../../licensedinterfaces/loggerinterface.h"
-#include "../../licensedinterfaces/basiciniutilinterface.h"
-#include "../../licensedinterfaces/mutexinterface.h"
-#include "../../licensedinterfaces/basicstringinterface.h"
-#include "../../licensedinterfaces/tickcountinterface.h"
-#include "../../licensedinterfaces/serxinterface.h"
-#include "../../licensedinterfaces/sberrorx.h"
-#include "../../licensedinterfaces/serialportparams2interface.h"
+#include "x2focuser.h"
 
 X2Focuser::X2Focuser(const char* pszDisplayName, 
 												const int& nInstanceIndex,
@@ -307,6 +295,11 @@ int	X2Focuser::execModalSettingsDialog(void)
         // device type
         nErr = m_PegasusController.getDeviceType(nPegasusDeviceType);
         switch(nPegasusDeviceType){
+            case FC:    // stepper only
+                dx->setChecked("radioButton", true);
+                dx->setEnabled("radioButton", false);
+                dx->setEnabled("radioButton_2", false);
+                break;
             case SMFC : // SMFC, disable this part
                 dx->setEnabled("radioButton", false);
                 dx->setEnabled("radioButton_2", false);
@@ -554,7 +547,7 @@ int	X2Focuser::amountIndexFocGoto(void)
 #pragma mark - FocuserTemperatureInterface
 int X2Focuser::focTemperature(double &dTemperature)
 {
-    int err;
+    int err = SB_OK;
 
     X2MutexLocker ml(GetMutex());
 
@@ -567,13 +560,16 @@ int X2Focuser::focTemperature(double &dTemperature)
     // this prevent us from asking the temperature too often
     static CStopWatch timer;
 
-    if(timer.GetElapsedSeconds() > 30.0f || m_fLastTemp < -99.0f) {
+    if(timer.GetElapsedSeconds() > 30.0f) {
         X2MutexLocker ml(GetMutex());
         err = m_PegasusController.getTemperature(m_fLastTemp);
         timer.Reset();
     }
 
-    dTemperature = m_fLastTemp;
+    if(m_fLastTemp == -127.0)
+        dTemperature = -100; // special TSX value to say that the temperature is not supported.
+    else
+        dTemperature = m_fLastTemp;
 
     return err;
 }
