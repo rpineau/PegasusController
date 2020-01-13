@@ -1,5 +1,12 @@
 #!/bin/bash
 
+PACKAGE_NAME="PegasusController_X2.pkg"
+BUNDLE_NAME="org.rti-zone.PegasusControllerX2"
+
+if [ ! -z "$app_id_signature" ]; then
+    codesign -s "$app_id_signature" ../build/Release/libPegasusController.dylib
+fi
+
 mkdir -p ROOT/tmp/PegasusController_X2/
 cp "../PegasusController.ui" ROOT/tmp/PegasusController_X2/
 cp "../PegasusAstro.png" ROOT/tmp/PegasusController_X2/
@@ -7,11 +14,12 @@ cp "../focuserlist PegasusController.txt" ROOT/tmp/PegasusController_X2/
 cp "../build/Release/libPegasusController.dylib" ROOT/tmp/PegasusController_X2/
 
 if [ ! -z "$installer_signature" ]; then
-# signed package using env variable installer_signature
-pkgbuild --root ROOT --identifier org.rti-zone.PegasusController_X2 --sign "$installer_signature" --scripts Scripts --version 1.0 PegasusController_X2.pkg
-pkgutil --check-signature ./PegasusController_X2.pkg
+	# signed package using env variable installer_signature
+	pkgbuild --root ROOT --identifier $BUNDLE_NAME --sign "$installer_signature" --scripts Scripts --version 1.0 $PACKAGE_NAME
+	pkgutil --check-signature ./${PACKAGE_NAME}
+
 else
-pkgbuild --root ROOT --identifier org.rti-zone.PegasusController_X2 --scripts Scripts --version 1.0 PegasusController_X2.pkg
+    pkgbuild --root ROOT --identifier $BUNDLE_NAME --scripts Scripts --version 1.0 $PACKAGE_NAME
 fi
 
 rm -rf ROOT
