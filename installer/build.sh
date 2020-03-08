@@ -4,7 +4,7 @@ PACKAGE_NAME="PegasusController_X2.pkg"
 BUNDLE_NAME="org.rti-zone.PegasusControllerX2"
 
 if [ ! -z "$app_id_signature" ]; then
-    codesign -s "$app_id_signature" ../build/Release/libPegasusController.dylib
+    codesign -f -s "$app_id_signature" --verbose ../build/Release/libPegasusController.dylib
 fi
 
 mkdir -p ROOT/tmp/PegasusController_X2/
