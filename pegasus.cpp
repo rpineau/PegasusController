@@ -144,11 +144,12 @@ void CPegasusController::Disconnect()
 int CPegasusController::haltFocuser()
 {
     int nErr;
-
+    char szResp[SERIAL_BUFFER_SIZE];
+    
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
-    nErr = dmfcCommand("H\n", NULL, 0);
+    nErr = dmfcCommand("H\n", szResp, SERIAL_BUFFER_SIZE);
 	m_bAbborted = true;
 	
 	return nErr;
@@ -158,6 +159,7 @@ int CPegasusController::gotoPosition(int nPos)
 {
     int nErr;
     char szCmd[SERIAL_BUFFER_SIZE];
+    char szResp[SERIAL_BUFFER_SIZE];
 
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
@@ -174,7 +176,7 @@ int CPegasusController::gotoPosition(int nPos)
 #endif
 
     sprintf(szCmd,"M:%d\n", nPos);
-    nErr = dmfcCommand(szCmd, NULL, 0);
+    nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
     m_nTargetPos = nPos;
 
     return nErr;
@@ -183,7 +185,6 @@ int CPegasusController::gotoPosition(int nPos)
 int CPegasusController::moveRelativeToPosision(int nSteps)
 {
     int nErr;
-    char szCmd[SERIAL_BUFFER_SIZE];
 
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
@@ -196,9 +197,7 @@ int CPegasusController::moveRelativeToPosision(int nSteps)
     fflush(Logfile);
 #endif
     m_nTargetPos = m_globalStatus.nCurPos + nSteps;
-    sprintf(szCmd,"G:%d\n", nSteps);
-    nErr = dmfcCommand(szCmd, NULL, 0);
-
+    nErr = gotoPosition(m_nTargetPos);
     return nErr;
 }
 
@@ -431,12 +430,13 @@ int CPegasusController::setMotoMaxSpeed(int nSpeed)
 {
     int nErr;
     char szCmd[SERIAL_BUFFER_SIZE];
+    char szResp[SERIAL_BUFFER_SIZE];
 
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 	
     sprintf(szCmd,"S:%d\n", nSpeed);
-    nErr = dmfcCommand(szCmd, NULL, 0);
+    nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
 
     return nErr;
 }
@@ -458,7 +458,8 @@ int CPegasusController::setBacklashComp(int nSteps)
 {
     int nErr = DMFC_OK;
     char szCmd[SERIAL_BUFFER_SIZE];
-	
+    char szResp[SERIAL_BUFFER_SIZE];
+
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
@@ -471,7 +472,7 @@ int CPegasusController::setBacklashComp(int nSteps)
 #endif
 
     sprintf(szCmd,"C:%d\n", nSteps);
-    nErr = dmfcCommand(szCmd, NULL, 0);
+    nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
     if(!nErr)
         m_globalStatus.nBacklash = nSteps;
 
@@ -607,7 +608,8 @@ int CPegasusController::setLedStatus(int nStatus)
 {
     int nErr = DMFC_OK;
     char szCmd[SERIAL_BUFFER_SIZE];
-	
+    char szResp[SERIAL_BUFFER_SIZE];
+
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
@@ -622,7 +624,7 @@ int CPegasusController::setLedStatus(int nStatus)
         default:
             break;
     }
-    nErr = dmfcCommand(szCmd, NULL, 0);
+    nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
 
     return nErr;
 }
@@ -673,7 +675,8 @@ int CPegasusController::getMotorType(int &nType)
 int CPegasusController::setMotorType(int nType)
 {
     int nErr = DMFC_OK;
-	
+    char szResp[SERIAL_BUFFER_SIZE];
+
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
@@ -688,10 +691,10 @@ int CPegasusController::setMotorType(int nType)
     if(m_globalStatus.nDeviceType == DMFC) {
         switch (nType) {
             case STEPPER:
-                nErr = dmfcCommand("R:1\n", NULL, 0);
+                nErr = dmfcCommand("R:1\n", szResp, SERIAL_BUFFER_SIZE);
                 break;
             case DC:
-                nErr = dmfcCommand("R:0\n", NULL, 0);
+                nErr = dmfcCommand("R:0\n", szResp, SERIAL_BUFFER_SIZE);
                 break;
 
             default:
@@ -706,12 +709,14 @@ int CPegasusController::syncMotorPosition(int nPos)
 {
     int nErr = DMFC_OK;
     char szCmd[SERIAL_BUFFER_SIZE];
-	
+	char szResp[SERIAL_BUFFER_SIZE];
+    
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
     snprintf(szCmd, SERIAL_BUFFER_SIZE, "W:%d\n", nPos);
-    nErr = dmfcCommand(szCmd, NULL, 0);
+    nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
+    nErr |= getConsolidatedStatus();
     return nErr;
 }
 
