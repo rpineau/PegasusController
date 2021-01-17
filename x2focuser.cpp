@@ -33,6 +33,8 @@ X2Focuser::X2Focuser(const char* pszDisplayName,
     }
 	m_PegasusController.SetSerxPointer(m_pSerX);
 	m_PegasusController.setLogger(m_pLogger);
+    m_PegasusController.setSleeper(m_pSleeper);
+
 }
 
 X2Focuser::~X2Focuser()

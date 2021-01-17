@@ -4,17 +4,7 @@
 //
 //  Created by Rodolphe Pineau on 6/11/2016.
 
-
 #include "pegasus.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <memory.h>
-#include <string.h>
-#include <time.h>
-#ifdef SB_MAC_BUILD
-#include <unistd.h>
-#endif
 
 
 CPegasusController::CPegasusController()
@@ -31,7 +21,8 @@ CPegasusController::CPegasusController()
     
     m_pSerx = NULL;
     m_pLogger = NULL;
-
+    m_pSleeper = NULL;
+    
 
 #ifdef PEGA_DEBUG
 #if defined(SB_WIN_BUILD)
@@ -92,6 +83,8 @@ int CPegasusController::Connect(const char *pszPort)
     if(!m_bIsConnected)
         return nErr;
 
+    m_pSleeper->sleep(2000); // apparently needed on old DMFC
+    
 #ifdef PEGA_DEBUG
 	ltime = time(NULL);
 	timestamp = asctime(localtime(&ltime));
@@ -104,7 +97,7 @@ int CPegasusController::Connect(const char *pszPort)
         snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::Connect] Connected.\n");
         m_pLogger->out(m_szLogBuffer);
 
-        snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::Connect] Getting Firmware.\n");
+        snprintf(m_szLogBuffer,LOG_BUFFER_SIZE,"[CPegasusController::Connect] Getting device type.\n");
         m_pLogger->out(m_szLogBuffer);
     }
 
@@ -745,7 +738,8 @@ int CPegasusController::getDeviceType(int &nDevice)
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
-    nErr = getConsolidatedStatus();
+    nErr = getStatus(nDevice);
+    nErr |= getConsolidatedStatus();
 #ifdef PEGA_DEBUG
 	if(nErr) {
 		ltime = time(NULL);
@@ -755,7 +749,7 @@ int CPegasusController::getDeviceType(int &nDevice)
 		fflush(Logfile);
 	}
 #endif
-    nDevice = m_globalStatus.nDeviceType;
+    // nDevice = m_globalStatus.nDeviceType;
 
     return nErr;
 }
