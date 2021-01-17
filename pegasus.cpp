@@ -251,7 +251,7 @@ int CPegasusController::isMotorMoving(bool &bMoving)
 }
 
 #pragma mark getters and setters
-int CPegasusController::getStatus(int &nStatus)
+int CPegasusController::getDeviceType(int &nDevice)
 {
     int nErr;
     char szResp[SERIAL_BUFFER_SIZE];
@@ -274,12 +274,21 @@ int CPegasusController::getStatus(int &nStatus)
         else if(strstr(szResp,"OK_DC")) {
             m_globalStatus.nDeviceType = FC;
         }
-        nStatus = DMFC_OK;
+        nDevice = m_globalStatus.nDeviceType;
         nErr = DMFC_OK;
     }
     else {
         nErr = COMMAND_FAILED;
     }
+
+#ifdef PEGA_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CPegasusController::getStatus nStatus = %d\n", timestamp, nStatus);
+    fprintf(Logfile, "[%s] CPegasusController::getStatus m_globalStatus.nDeviceType = %d\n", timestamp, m_globalStatus.nDeviceType);
+    fflush(Logfile);
+#endif
     return nErr;
 }
 
@@ -346,6 +355,7 @@ int CPegasusController::getConsolidatedStatus()
     else {
         m_globalStatus.bReady = false;
     }
+    
     strncpy(m_globalStatus.szVersion,  m_svParsedRespForA[fVERSIONS].c_str(), SERIAL_BUFFER_SIZE);
     m_globalStatus.nMotorType = atoi(m_svParsedRespForA[fMOTOR_MODE].c_str());
     m_globalStatus.dTemperature = atof(m_svParsedRespForA[fTEMP].c_str());
@@ -727,29 +737,6 @@ int CPegasusController::getRotaryEncPos(int &nPos)
 
     // convert response
     nPos = atoi(szResp);
-
-    return nErr;
-}
-
-int CPegasusController::getDeviceType(int &nDevice)
-{
-    int nErr;
-	
-	if(!m_bIsConnected)
-		return ERR_COMMNOLINK;
-
-    nErr = getStatus(nDevice);
-    nErr |= getConsolidatedStatus();
-#ifdef PEGA_DEBUG
-	if(nErr) {
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] CPegasusController::getDeviceType **** ERROR **** getting Device Type : %d\n", timestamp, nErr);
-		fflush(Logfile);
-	}
-#endif
-    // nDevice = m_globalStatus.nDeviceType;
 
     return nErr;
 }

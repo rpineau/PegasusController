@@ -35,7 +35,7 @@
 
 //#define PEGA_DEBUG
 
-#define DRIVER_VERSION      1.31
+#define DRIVER_VERSION      1.4
 
 #ifdef PEGA_DEBUG
 #if defined(SB_WIN_BUILD)
@@ -112,7 +112,7 @@ public:
     // getter and setter
     void        setDebugLog(bool bEnable) {m_bDebugLog = bEnable; };
 
-    int         getStatus(int &nStatus);
+    int         getDeviceType(int &nDevice);
     int         getConsolidatedStatus(void);
 
     int         getMotoMaxSpeed(int &nSpeed);
@@ -138,8 +138,6 @@ public:
     int         syncMotorPosition(int nPos);
 
     int         getRotaryEncPos(int &nPos);  // same as getMotoMaxSpeed
-
-    int         getDeviceType(int &nDevice);
 
     int         getPosLimit(void);
     void        setPosLimit(int nLimit);
