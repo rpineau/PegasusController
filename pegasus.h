@@ -18,11 +18,24 @@
 #include <typeinfo>
 #include <stdexcept>
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <memory.h>
+#include <string.h>
+#include <time.h>
+#ifdef SB_MAC_BUILD
+#include <unistd.h>
+#endif
+
 #include "../../licensedinterfaces/sberrorx.h"
 #include "../../licensedinterfaces/serxinterface.h"
 #include "../../licensedinterfaces/loggerinterface.h"
+#include "../../licensedinterfaces/sleeperinterface.h"
 
-// #define PEGA_DEBUG
+//#define PEGA_DEBUG
+
+#define DRIVER_VERSION      1.31
 
 #ifdef PEGA_DEBUG
 #if defined(SB_WIN_BUILD)
@@ -86,7 +99,7 @@ public:
 
     void        SetSerxPointer(SerXInterface *p) { m_pSerx = p; };
     void        setLogger(LoggerInterface *pLogger) { m_pLogger = pLogger; };
-
+    void        setSleeper(SleeperInterface* pSleeper) {m_pSleeper = pSleeper; };
     // move commands
     int         haltFocuser();
     int         gotoPosition(int nPos);
@@ -148,7 +161,8 @@ protected:
 
     SerXInterface   *m_pSerx;
     LoggerInterface *m_pLogger;
-
+    SleeperInterface *m_pSleeper;
+        
     bool            m_bDebugLog;
     bool            m_bIsConnected;
     char            m_szFirmwareVersion[SERIAL_BUFFER_SIZE];
