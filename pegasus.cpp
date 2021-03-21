@@ -285,8 +285,7 @@ int CPegasusController::getDeviceType(int &nDevice)
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CPegasusController::getStatus nStatus = %d\n", timestamp, nStatus);
-    fprintf(Logfile, "[%s] CPegasusController::getStatus m_globalStatus.nDeviceType = %d\n", timestamp, m_globalStatus.nDeviceType);
+    fprintf(Logfile, "[%s] CPegasusController::getDeviceType m_globalStatus.nDeviceType = %d\n", timestamp, m_globalStatus.nDeviceType);
     fflush(Logfile);
 #endif
     return nErr;
