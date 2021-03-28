@@ -276,6 +276,7 @@ int CPegasusController::getDeviceType(int &nDevice)
         }
         nDevice = m_globalStatus.nDeviceType;
         nErr = DMFC_OK;
+        getConsolidatedStatus();
     }
     else {
         nErr = COMMAND_FAILED;
@@ -288,6 +289,7 @@ int CPegasusController::getDeviceType(int &nDevice)
     fprintf(Logfile, "[%s] CPegasusController::getDeviceType m_globalStatus.nDeviceType = %d\n", timestamp, m_globalStatus.nDeviceType);
     fflush(Logfile);
 #endif
+    
     return nErr;
 }
 
@@ -573,7 +575,7 @@ int CPegasusController::getPosition(int &nPosition)
 
     // convert response
     nPosition = atoi(szResp);
-
+    m_globalStatus.nCurPos = nPosition;
     return nErr;
 }
 

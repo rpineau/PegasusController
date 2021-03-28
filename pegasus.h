@@ -33,19 +33,9 @@
 #include "../../licensedinterfaces/loggerinterface.h"
 #include "../../licensedinterfaces/sleeperinterface.h"
 
-//#define PEGA_DEBUG
+// #define PEGA_DEBUG
 
-#define DRIVER_VERSION      1.4
-
-#ifdef PEGA_DEBUG
-#if defined(SB_WIN_BUILD)
-#define PEGA_LOGFILENAME "C:\\PegasusLog.txt"
-#elif defined(SB_LINUX_BUILD)
-#define PEGA_LOGFILENAME "/tmp/PegasusLog.txt"
-#elif defined(SB_MAC_BUILD)
-#define PEGA_LOGFILENAME "/tmp/PegasusLog.txt"
-#endif
-#endif
+#define DRIVER_VERSION      1.5
 
 #define SERIAL_BUFFER_SIZE 256
 #define MAX_TIMEOUT 5000
