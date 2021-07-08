@@ -274,6 +274,9 @@ int CPegasusController::getDeviceType(int &nDevice)
         else if(strstr(szResp,"OK_DC")) {
             m_globalStatus.nDeviceType = FC;
         }
+        else if(strstr(szResp,"OK_SCOPS")) {
+            m_globalStatus.nDeviceType = SCOPS;
+        }
         nDevice = m_globalStatus.nDeviceType;
         nErr = DMFC_OK;
         getConsolidatedStatus();
