@@ -117,6 +117,8 @@ void X2Focuser::deviceInfoNameShort(BasicStringInterface& str) const
             str = "DMFC";
         else if(deviceType == SMFC)
             str = "SMFC";
+        else if(deviceType == SCOPS)
+            str = "Scops OAG";
     }
 }
 
@@ -147,21 +149,7 @@ void X2Focuser::deviceInfoFirmwareVersion(BasicStringInterface& str)
 
 void X2Focuser::deviceInfoModel(BasicStringInterface& str)							
 {
-    X2MutexLocker ml(GetMutex());
-
-    if(!m_bLinked) {
-        str="NA";
-    }
-    else {
-        // get model version
-        int deviceType;
-
-        m_PegasusController.getDeviceType(deviceType);
-        if(deviceType == DMFC)
-            str = "DMFC";
-        else if(deviceType == SMFC)
-            str = "SMFC";
-    }
+    deviceInfoNameShort(str);
 }
 
 #pragma mark - LinkInterface
