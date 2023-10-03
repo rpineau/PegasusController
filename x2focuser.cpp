@@ -141,9 +141,9 @@ void X2Focuser::deviceInfoFirmwareVersion(BasicStringInterface& str)
     }
     else {
     // get firmware version
-        char cFirmware[SERIAL_BUFFER_SIZE];
-        m_PegasusController.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
-        str = cFirmware;
+        std::string sFirmware;
+        m_PegasusController.getFirmwareVersion(sFirmware);
+        str = sFirmware.c_str();
     }
 }
 

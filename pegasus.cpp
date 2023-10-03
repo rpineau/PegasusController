@@ -11,8 +11,9 @@ CPegasusController::CPegasusController()
 {
     m_globalStatus.nDeviceType = NONE;
     m_globalStatus.bReady = false;
-    memset(m_globalStatus.szVersion,0,SERIAL_BUFFER_SIZE);
+    m_globalStatus.sVersion.clear();
     m_globalStatus.nMotorType = STEPPER;
+    m_globalStatus.nCurPos = 0;
 
     m_nTargetPos = 0;
     m_nPosLimit = 0;
@@ -168,7 +169,7 @@ int CPegasusController::gotoPosition(int nPos)
     fflush(Logfile);
 #endif
 
-    sprintf(szCmd,"M:%d\n", nPos);
+    snprintf(szCmd, SERIAL_BUFFER_SIZE, "M:%d\n", nPos);
     nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
     m_nTargetPos = nPos;
 
@@ -359,17 +360,17 @@ int CPegasusController::getConsolidatedStatus()
     else {
         m_globalStatus.bReady = false;
     }
-    
-    strncpy(m_globalStatus.szVersion,  m_svParsedRespForA[fVERSIONS].c_str(), SERIAL_BUFFER_SIZE);
-    m_globalStatus.nMotorType = atoi(m_svParsedRespForA[fMOTOR_MODE].c_str());
-    m_globalStatus.dTemperature = atof(m_svParsedRespForA[fTEMP].c_str());
-    m_globalStatus.nCurPos = atoi(m_svParsedRespForA[fPOS].c_str());
+
+    m_globalStatus.sVersion.assign(m_svParsedRespForA[fVERSIONS]);
+    m_globalStatus.nMotorType = std::stoi(m_svParsedRespForA[fMOTOR_MODE]);
+    m_globalStatus.dTemperature = std::stof(m_svParsedRespForA[fTEMP]);
+    m_globalStatus.nCurPos = std::stoi(m_svParsedRespForA[fPOS]);
     if(m_svParsedRespForA.size()>5){ // SMFC seems to not have these fields
-        m_globalStatus.bMoving = atoi(m_svParsedRespForA[fMoving].c_str());
-        m_globalStatus.nLedStatus = atoi(m_svParsedRespForA[fLED].c_str());
-        m_globalStatus.bReverse = atoi(m_svParsedRespForA[fREVERSE].c_str());
-        m_globalStatus.bEncodeEnabled = atoi(m_svParsedRespForA[fDIS_ENC].c_str());
-        m_globalStatus.nBacklash = atoi(m_svParsedRespForA[fBACKLASH].c_str());
+        m_globalStatus.bMoving = std::stoi(m_svParsedRespForA[fMoving]);
+        m_globalStatus.nLedStatus = std::stoi(m_svParsedRespForA[fLED]);
+        m_globalStatus.bReverse = std::stoi(m_svParsedRespForA[fREVERSE]);
+        m_globalStatus.bEncodeEnabled = std::stoi(m_svParsedRespForA[fDIS_ENC]);
+        m_globalStatus.nBacklash = std::stoi(m_svParsedRespForA[fBACKLASH]);
     }
 #ifdef PEGA_DEBUG
     else {
@@ -442,7 +443,7 @@ int CPegasusController::setMotoMaxSpeed(int nSpeed)
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 	
-    sprintf(szCmd,"S:%d\n", nSpeed);
+    snprintf(szCmd, SERIAL_BUFFER_SIZE, "S:%d\n", nSpeed);
     nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
 
     return nErr;
@@ -478,7 +479,7 @@ int CPegasusController::setBacklashComp(int nSteps)
     fflush(Logfile);
 #endif
 
-    sprintf(szCmd,"C:%d\n", nSteps);
+    snprintf(szCmd, SERIAL_BUFFER_SIZE, "C:%d\n", nSteps);
     nErr = dmfcCommand(szCmd, szResp, SERIAL_BUFFER_SIZE);
     if(!nErr)
         m_globalStatus.nBacklash = nSteps;
@@ -497,9 +498,9 @@ int CPegasusController::setEnableRotaryEncoder(bool bEnabled)
 		return ERR_COMMNOLINK;
 
     if(bEnabled)
-        sprintf(szCmd,"E:%d\n", R_ON);
+        snprintf(szCmd, SERIAL_BUFFER_SIZE, "E:%d\n", R_ON);
     else
-        sprintf(szCmd,"E:%d\n", R_OFF);
+        snprintf(szCmd, SERIAL_BUFFER_SIZE, "E:%d\n", R_OFF);
 
 #ifdef PEGA_DEBUG
     ltime = time(NULL);
@@ -527,12 +528,14 @@ int CPegasusController::getEnableRotaryEncoder(bool &bEnabled)
     return nErr;
 }
 
-int CPegasusController::getFirmwareVersion(char *pszVersion, int nStrMaxLen)
+int CPegasusController::getFirmwareVersion(std::string &sVersion)
 {
     int nErr = DMFC_OK;
     char szResp[SERIAL_BUFFER_SIZE];
 	
-	if(!m_bIsConnected)
+    sVersion.clear();
+
+    if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
     if(!m_bIsConnected)
@@ -542,7 +545,7 @@ int CPegasusController::getFirmwareVersion(char *pszVersion, int nStrMaxLen)
     if(nErr)
         return nErr;
 
-    strncpy(pszVersion, szResp, nStrMaxLen);
+    sVersion.assign(szResp);
     return nErr;
 }
 
@@ -776,9 +779,9 @@ int CPegasusController::setReverseEnable(bool bEnabled)
 		return ERR_COMMNOLINK;
 
     if(bEnabled)
-        sprintf(szCmd,"N:%d\n", REVERSE);
+        snprintf(szCmd, SERIAL_BUFFER_SIZE, "N:%d\n", REVERSE);
     else
-        sprintf(szCmd,"N:%d\n", NORMAL);
+        snprintf(szCmd, SERIAL_BUFFER_SIZE, "N:%d\n", NORMAL);
 
 #ifdef PEGA_DEBUG
     ltime = time(NULL);

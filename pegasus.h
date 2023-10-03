@@ -54,7 +54,7 @@ enum RotaryEnable   {R_ON = 0, R_OFF};
 typedef struct {
     int     nDeviceType;
     bool    bReady;
-    char    szVersion[SERIAL_BUFFER_SIZE];
+    std::string    sVersion;
     int     nMotorType;
     double  dTemperature;
     int     nCurPos;
@@ -114,7 +114,7 @@ public:
     int         setEnableRotaryEncoder(bool bEnabled);
     int         getEnableRotaryEncoder(bool &bEnabled);
 
-    int         getFirmwareVersion(char *pszVersion, int nStrMaxLen);
+    int         getFirmwareVersion(std::string &sVersion);
     int         getTemperature(double &dTemperature);
 
     int         getPosition(int &nPosition);
