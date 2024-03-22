@@ -35,7 +35,7 @@
 
 // #define PEGA_DEBUG
 
-#define DRIVER_VERSION      1.7
+#define DRIVER_VERSION      1.70
 
 #define SERIAL_BUFFER_SIZE 256
 #define MAX_TIMEOUT 5000
