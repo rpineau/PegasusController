@@ -35,14 +35,14 @@
 
 // #define PEGA_DEBUG
 
-#define DRIVER_VERSION      1.6
+#define DRIVER_VERSION      1.7
 
 #define SERIAL_BUFFER_SIZE 256
 #define MAX_TIMEOUT 5000
 #define LOG_BUFFER_SIZE 256
 
 enum DMFC_Errors    {DMFC_OK = 0, NOT_CONNECTED, ND_CANT_CONNECT, DMFC_BAD_CMD_RESPONSE, COMMAND_FAILED};
-enum DeviceType     {NONE = 0, DMFC, SMFC, FC, SCOPS};
+enum DeviceType     {NONE = 0, DMFC, SMFC, FC, SCOPS, PRDG};
 enum MotorType      {DC = 0, STEPPER};
 enum GetLedStatus   {OFF = 0, ON};
 enum SetLEdStatus   {SWITCH_OFF = 1, SWITCH_ON};

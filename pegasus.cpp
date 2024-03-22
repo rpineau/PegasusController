@@ -356,6 +356,9 @@ int CPegasusController::getConsolidatedStatus()
         else if(m_svParsedRespForA[fSTATUS].find("_FC")!= -1) {
             m_globalStatus.nDeviceType = FC;
         }
+        else if(m_svParsedRespForA[fSTATUS].find("_PRDG")!= -1) {
+            m_globalStatus.nDeviceType = PRDG;
+        }
     }
     else {
         m_globalStatus.bReady = false;

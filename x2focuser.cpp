@@ -119,6 +119,8 @@ void X2Focuser::deviceInfoNameShort(BasicStringInterface& str) const
             str = "SMFC";
         else if(deviceType == SCOPS)
             str = "Scops OAG";
+        else if(deviceType == PRDG)
+            str = "Prodigy";
     }
 }
 
